@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Mic, MessageSquare, Zap, Play, Clock, Star, Loader, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import { Target, Mic, MessageSquare, Zap, Play, Clock, Star, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import API_CONFIG from '../config/api';
+import { getAuthHeaders, buildApiUrl } from '../config/api';
 
 const Exercises = ({ userId }) => {
+  // Use a default userId for testing if none is provided
+  const effectiveUserId = userId || 1;
+  
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,27 +15,48 @@ const Exercises = ({ userId }) => {
 
   useEffect(() => {
     fetchExercises();
-  }, [userId, selectedCategory, selectedLevel]);
+  }, [effectiveUserId, selectedCategory, selectedLevel]);
 
   const fetchExercises = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      let url = `/api/exercises`;
-      if (selectedCategory !== 'all') {
-        url += `/${selectedCategory}`;
-        if (selectedLevel !== 'all') {
-          url += `/${selectedLevel}`;
-        }
+      let url;
+      if (selectedCategory === 'all' && selectedLevel === 'all') {
+        url = buildApiUrl(`/api/exercises/${effectiveUserId}`);
+      } else if (selectedCategory !== 'all' && selectedLevel !== 'all') {
+        url = buildApiUrl(`/api/exercises/${selectedCategory}/${selectedLevel}/${effectiveUserId}`);
+      } else if (selectedCategory !== 'all') {
+        url = buildApiUrl(`/api/exercises/${selectedCategory}/all/${effectiveUserId}`);
+      } else {
+        url = buildApiUrl(`/api/exercises/all/${selectedLevel}/${effectiveUserId}`);
       }
-      url += `/${userId}`;
       
-      const response = await axios.get(url);
-      setExercises(response.data);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setExercises(data.exercises || []);
+      } else if (response.status === 401 || response.status === 403) {
+        // Redirect to login if unauthorized
+        window.location.href = '/login';
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (err) {
       console.error('Error fetching exercises:', err);
-      setError(err.response?.data?.message || 'Failed to fetch exercises. Please try again.');
+      if (err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to the server. Please check your internet connection and try again.');
+      } else {
+        setError(err.message || 'Failed to fetch exercises. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -57,7 +82,7 @@ const Exercises = ({ userId }) => {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
               <p className="text-gray-600">Loading exercises...</p>
@@ -70,22 +95,23 @@ const Exercises = ({ userId }) => {
 
   // Error state
   if (error) {
-  return (
+    return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center space-x-3">
               <AlertCircle className="w-6 h-6 text-red-600" />
-          <div>
+              <div>
                 <h3 className="text-lg font-medium text-red-800">Error Loading Exercises</h3>
                 <p className="text-red-700 mt-1">{error}</p>
                 <button 
                   onClick={fetchExercises}
-                  className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
                 >
+                  <Loader className="w-4 h-4 mr-2 animate-spin" />
                   Try Again
                 </button>
-          </div>
+              </div>
             </div>
           </div>
         </div>
@@ -100,7 +126,7 @@ const Exercises = ({ userId }) => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Speech Exercises</h1>
           <p className="text-gray-600 mt-2">Choose from various categories and difficulty levels to practice your speech</p>
-          </div>
+        </div>
           
         {/* Category Filter */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -123,12 +149,12 @@ const Exercises = ({ userId }) => {
                   <div className="text-center">
                     <Icon className={`w-8 h-8 mx-auto mb-2 ${isActive ? 'text-white' : 'text-gray-600'}`} />
                     <span className="text-sm font-medium">{category.name}</span>
-          </div>
+                  </div>
                 </button>
               );
             })}
+          </div>
         </div>
-      </div>
 
         {/* Level Filter */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -138,7 +164,7 @@ const Exercises = ({ userId }) => {
               const isActive = selectedLevel === level.id;
               
               return (
-            <button
+                <button
                   key={level.id}
                   onClick={() => setSelectedLevel(level.id)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -148,13 +174,13 @@ const Exercises = ({ userId }) => {
                   }`}
                 >
                   {level.name}
-            </button>
+                </button>
               );
             })}
           </div>
         </div>
 
-      {/* Exercises Grid */}
+        {/* Exercises Grid */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -165,48 +191,39 @@ const Exercises = ({ userId }) => {
           </div>
 
           {exercises.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {exercises.map((exercise) => (
                 <div key={exercise.id} className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{exercise.title}</h3>
-                      <p className="text-gray-600 text-sm mb-3">{exercise.description}</p>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {exercise.targetText || exercise.exerciseType || 'Speech Exercise'}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-3">
+                        {exercise.feedback || 'Practice this exercise to improve your speech clarity'}
+                      </p>
                       
                       <div className="flex items-center space-x-4 mb-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          exercise.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                          exercise.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                          exercise.difficultyLevel === 'beginner' ? 'bg-green-100 text-green-800' :
+                          exercise.difficultyLevel === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                      {exercise.difficulty}
-                    </span>
+                          {exercise.difficultyLevel || 'Beginner'}
+                        </span>
                         <span className="flex items-center text-sm text-gray-500">
                           <Clock className="w-4 h-4 mr-1" />
-                          {exercise.estimatedTime}
+                          {exercise.sessionDuration ? `${Math.round(exercise.sessionDuration / 60)}m` : '2m'}
                         </span>
-                        {exercise.rating && (
+                        {exercise.overallScore && (
                           <span className="flex items-center text-sm text-gray-500">
                             <Star className="w-4 h-4 mr-1 text-yellow-400" />
-                            {exercise.rating}
-                    </span>
+                            {exercise.overallScore}%
+                          </span>
                         )}
-              </div>
-
-                      {exercise.targetSounds && (
-                        <div className="mb-4">
-                          <p className="text-xs font-medium text-gray-700 mb-2">Target Sounds:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {exercise.targetSounds.map((sound, index) => (
-                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                                {sound}
-                              </span>
-                            ))}
-                </div>
-                </div>
-                      )}
-                </div>
-              </div>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="flex items-center justify-between">
                     <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
@@ -214,27 +231,27 @@ const Exercises = ({ userId }) => {
                       Start Practice
                     </button>
                     
-                    {exercise.completed && (
+                    {exercise.completedAt && (
                       <div className="flex items-center text-green-600">
                         <CheckCircle className="w-5 h-5 mr-1" />
                         <span className="text-sm font-medium">Completed</span>
-              </div>
+                      </div>
                     )}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Target className="w-8 h-8 text-gray-400" />
               </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No exercises found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No exercises found</h3>
               <p className="text-gray-500">
                 Try adjusting your category or difficulty level filters.
               </p>
-        </div>
-      )}
+            </div>
+          )}
         </div>
 
         {/* Quick Start Section */}
@@ -251,7 +268,7 @@ const Exercises = ({ userId }) => {
               <button className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors">
                 Recommended Session
               </button>
-          </div>
+            </div>
           </div>
         </div>
       </div>

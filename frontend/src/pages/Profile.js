@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Trophy, Calendar, Target, Star, Award, TrendingUp, Clock, Loader, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import API_CONFIG from '../config/api';
 
 const Profile = ({ userId }) => {
   const [userProfile, setUserProfile] = useState(null);
@@ -19,20 +19,31 @@ const Profile = ({ userId }) => {
       setError(null);
       
       // Fetch user profile data
-      const profileResponse = await axios.get(`/api/users/${userId}`);
-      setUserProfile(profileResponse.data);
+      const profileResponse = await fetch(`${API_CONFIG.BASE_URL}/api/users/${userId}`);
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setUserProfile(profileData);
+      } else {
+        throw new Error(`HTTP ${profileResponse.status}: ${profileResponse.statusText}`);
+      }
       
-      // Fetch user achievements
-      const achievementsResponse = await axios.get(`/api/users/${userId}/achievements`);
-      setAchievements(achievementsResponse.data);
+      // For now, use mock data for achievements and recent activity
+      // In a real app, these would come from separate API endpoints
+      setAchievements([
+        { id: 1, name: "First Exercise", description: "Completed your first exercise", date: "2024-01-15", icon: "🎯" },
+        { id: 2, name: "Week Streak", description: "Maintained a 7-day streak", date: "2024-01-14", icon: "🔥" },
+        { id: 3, name: "Perfect Score", description: "Achieved 100% on an exercise", date: "2024-01-13", icon: "⭐" }
+      ]);
       
-      // Fetch recent activity
-      const activityResponse = await axios.get(`/api/users/${userId}/recent-activity`);
-      setRecentActivity(activityResponse.data);
+      setRecentActivity([
+        { id: 1, type: "exercise", description: "Completed Phoneme Practice", time: "2 hours ago", score: 85 },
+        { id: 2, type: "goal", description: "Met daily practice goal", time: "5 hours ago", score: null },
+        { id: 3, type: "exercise", description: "Completed Word Pronunciation", time: "1 day ago", score: 92 }
+      ]);
       
     } catch (err) {
       console.error('Error fetching profile data:', err);
-      setError(err.response?.data?.message || 'Failed to fetch profile data. Please try again.');
+      setError(err.message || 'Failed to fetch profile data. Please try again.');
     } finally {
       setLoading(false);
     }

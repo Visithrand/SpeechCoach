@@ -1,7 +1,7 @@
 // API Configuration for Spring Boot Backend
 const API_CONFIG = {
-  // Base URL for your Spring Boot backend
-  BASE_URL: 'http://localhost:8082',
+  // Base URL for your Spring Boot backend (using proxy)
+  BASE_URL: '',
   
   // Authentication endpoints
   AUTH: {

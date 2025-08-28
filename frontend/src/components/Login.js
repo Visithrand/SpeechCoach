@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Loader } from 'lucide-react';
 import API_CONFIG from '../config/api';
+import './Auth.css';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -151,6 +152,7 @@ const Login = ({ onLogin }) => {
                   className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-primary">
+                  <Lock className="inline h-4 w-4 mr-1" />
                   Remember me
                 </label>
               </div>
@@ -186,12 +188,7 @@ const Login = ({ onLogin }) => {
                     Signing in...
                   </>
                 ) : (
-                  <>
-                    <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                      <Lock className="h-5 w-5 text-primary group-hover:text-primary-light" />
-                    </span>
-                    Sign in
-                  </>
+                  'Sign in'
                 )}
               </button>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { getAuthHeaders, buildApiUrl } from '../config/api';
 
 function AIExercises({ userId }) {
   const [aiExercises, setAiExercises] = useState([]);
@@ -7,14 +7,13 @@ function AIExercises({ userId }) {
   const [bodyExercises, setBodyExercises] = useState([]);
   const [fluencyAnalysis, setFluencyAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [selectedExerciseType, setSelectedExerciseType] = useState('sentence');
   const [currentExercise, setCurrentExercise] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [chunks, setChunks] = useState([]);
-
-  const API_BASE = 'http://localhost:8082/api';
 
   useEffect(() => {
     if (userId) {
@@ -24,24 +23,65 @@ function AIExercises({ userId }) {
 
   const loadUserData = async () => {
     setLoading(true);
+    setError(null);
     try {
       // Load AI exercises
-      const exercisesResponse = await axios.get(`${API_BASE}/ai/exercises/${userId}`);
-      setAiExercises(exercisesResponse.data.exercises || []);
+      const exercisesResponse = await fetch(buildApiUrl(`/api/ai/exercises/${userId}`), {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (exercisesResponse.ok) {
+        const data = await exercisesResponse.json();
+        setAiExercises(data.exercises || []);
+      } else if (exercisesResponse.status === 401 || exercisesResponse.status === 403) {
+        window.location.href = '/login';
+        return;
+      }
 
       // Load active exercises
-      const activeResponse = await axios.get(`${API_BASE}/ai/exercises/${userId}/active`);
-      setActiveExercises(activeResponse.data.activeExercises || []);
+      const activeResponse = await fetch(buildApiUrl(`/api/ai/exercises/${userId}/active`), {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (activeResponse.ok) {
+        const data = await activeResponse.json();
+        setActiveExercises(data.activeExercises || []);
+      }
 
       // Load body exercises
-      const bodyResponse = await axios.get(`${API_BASE}/ai/body-exercises/${userId}`);
-      setBodyExercises(bodyResponse.data.suggestions || []);
+      const bodyResponse = await fetch(buildApiUrl(`/api/ai/body-exercises/${userId}`), {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (bodyResponse.ok) {
+        const data = await bodyResponse.json();
+        setBodyExercises(data.suggestions || []);
+      }
 
       // Load fluency analysis
-      const fluencyResponse = await axios.get(`${API_BASE}/ai/fluency-analysis/${userId}`);
-      setFluencyAnalysis(fluencyResponse.data);
+      const fluencyResponse = await fetch(buildApiUrl(`/api/ai/fluency-analysis/${userId}`), {
+        method: 'GET',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (fluencyResponse.ok) {
+        const data = await fluencyResponse.json();
+        setFluencyAnalysis(data);
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
+      if (error.message.includes('Failed to fetch')) {
+        setError('Unable to connect to the server. Please check your internet connection and try again.');
+      } else {
+        setError('Failed to load exercises. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -49,29 +89,65 @@ function AIExercises({ userId }) {
 
   const generateNewExercise = async () => {
     try {
-      const response = await axios.post(`${API_BASE}/ai/generate-exercise/${userId}`, null, {
-        params: { exerciseType: selectedExerciseType }
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(buildApiUrl(`/api/ai/generate-exercise/${userId}?exerciseType=${selectedExerciseType}`), {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
       });
-      const newExercise = response.data.exercise;
-      setAiExercises(prev => [newExercise, ...prev]);
-      setActiveExercises(prev => [newExercise, ...prev]);
-      setCurrentExercise(newExercise);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const newExercise = data.exercise;
+        setAiExercises(prev => [newExercise, ...prev]);
+        setActiveExercises(prev => [newExercise, ...prev]);
+        setCurrentExercise(newExercise);
+      } else if (response.status === 401 || response.status === 403) {
+        window.location.href = '/login';
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to generate exercise');
+      }
     } catch (error) {
       console.error('Error generating exercise:', error);
-      alert('Failed to generate exercise. Please try again.');
+      setError(error.message || 'Failed to generate exercise. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const generateWeeklyPlan = async () => {
     try {
-      const response = await axios.post(`${API_BASE}/ai/generate-weekly-plan/${userId}`);
-      const weeklyPlan = response.data.weeklyPlan;
-      setAiExercises(prev => [...weeklyPlan, ...prev]);
-      setActiveExercises(prev => [...weeklyPlan, ...prev]);
-      alert('Weekly plan generated successfully!');
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(buildApiUrl(`/api/ai/generate-weekly-plan/${userId}`), {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const weeklyPlan = data.weeklyPlan;
+        setAiExercises(prev => [...weeklyPlan, ...prev]);
+        setActiveExercises(prev => [...weeklyPlan, ...prev]);
+        setError(null);
+      } else if (response.status === 401 || response.status === 403) {
+        window.location.href = '/login';
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to generate weekly plan');
+      }
     } catch (error) {
       console.error('Error generating weekly plan:', error);
-      alert('Failed to generate weekly plan. Please try again.');
+      setError(error.message || 'Failed to generate weekly plan. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,7 +173,7 @@ function AIExercises({ userId }) {
       setIsRecording(true);
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      alert('Please allow microphone access to record audio.');
+      setError('Please allow microphone access to record audio.');
     }
   };
 
@@ -111,23 +187,48 @@ function AIExercises({ userId }) {
 
   const completeExercise = async (exerciseId, performanceScore = null) => {
     try {
-      const params = performanceScore ? { performanceScore } : {};
-      await axios.post(`${API_BASE}/ai/exercises/${exerciseId}/complete`, null, { params });
+      setLoading(true);
+      setError(null);
       
-      // Update local state
-      setActiveExercises(prev => prev.filter(ex => ex.id !== exerciseId));
-      setAiExercises(prev => prev.map(ex => 
-        ex.id === exerciseId ? { ...ex, isCompleted: true } : ex
-      ));
+      const params = performanceScore ? `?performanceScore=${performanceScore}` : '';
+      const response = await fetch(buildApiUrl(`/api/ai/exercises/${exerciseId}/complete${params}`), {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        credentials: 'include'
+      });
       
-      // Reload fluency analysis
-      const fluencyResponse = await axios.get(`${API_BASE}/ai/fluency-analysis/${userId}`);
-      setFluencyAnalysis(fluencyResponse.data);
-      
-      alert('Exercise completed successfully!');
+      if (response.ok) {
+        // Update local state
+        setActiveExercises(prev => prev.filter(ex => ex.id !== exerciseId));
+        setAiExercises(prev => prev.map(ex => 
+          ex.id === exerciseId ? { ...ex, isCompleted: true } : ex
+        ));
+        
+        // Reload fluency analysis
+        const fluencyResponse = await fetch(buildApiUrl(`/api/ai/fluency-analysis/${userId}`), {
+          method: 'GET',
+          headers: getAuthHeaders(),
+          credentials: 'include'
+        });
+        
+        if (fluencyResponse.ok) {
+          const data = await fluencyResponse.json();
+          setFluencyAnalysis(data);
+        }
+        
+        setError(null);
+      } else if (response.status === 401 || response.status === 403) {
+        window.location.href = '/login';
+        return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to complete exercise');
+      }
     } catch (error) {
       console.error('Error completing exercise:', error);
-      alert('Failed to complete exercise. Please try again.');
+      setError(error.message || 'Failed to complete exercise. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,7 +247,7 @@ function AIExercises({ userId }) {
     return 'text-red-600';
   };
 
-  if (loading) {
+  if (loading && !aiExercises.length && !activeExercises.length) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -166,17 +267,29 @@ function AIExercises({ userId }) {
         <div className="flex flex-wrap gap-4">
           <button
             onClick={generateNewExercise}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            Generate New Exercise
+            {loading ? 'Generating...' : 'Generate New Exercise'}
           </button>
           <button
             onClick={generateWeeklyPlan}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            Generate Weekly Plan
+            {loading ? 'Generating...' : 'Generate Weekly Plan'}
           </button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-5 h-5 bg-red-600 rounded-full"></div>
+              <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Exercise Type Selector */}
@@ -237,18 +350,22 @@ function AIExercises({ userId }) {
                   </p>
                 )}
                 
-                <p className="text-sm text-gray-500 mb-3">{exercise.aiReasoning}</p>
+                {exercise.aiReasoning && (
+                  <p className="text-sm text-gray-500 mb-3">{exercise.aiReasoning}</p>
+                )}
                 
                 <div className="flex gap-2">
                   <button
                     onClick={() => completeExercise(exercise.id, 85)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     Complete (Good)
                   </button>
                   <button
                     onClick={() => completeExercise(exercise.id, 70)}
-                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
+                    disabled={loading}
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     Complete (Needs Work)
                   </button>

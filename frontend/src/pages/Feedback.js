@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, CheckCircle, Target, AlertCircle, Loader } from 'lucide-react';
 import axios from 'axios';
+import API_CONFIG from '../config/api';
 
 const Feedback = ({ userId }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sessionData, setSessionData] = useState(null);
+  const [feedbackData, setFeedbackData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,8 +19,8 @@ const Feedback = ({ userId }) => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`/api/feedback/${userId}`);
-      setSessionData(response.data);
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api/feedback/${userId}`);
+      setFeedbackData(response.data);
     } catch (err) {
       console.error('Error fetching feedback data:', err);
       setError(err.response?.data?.message || 'Failed to fetch feedback data. Please try again.');
@@ -70,7 +71,7 @@ const Feedback = ({ userId }) => {
   }
 
   // No data state
-  if (!sessionData) {
+  if (!feedbackData || !feedbackData.feedback) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,11 +86,11 @@ const Feedback = ({ userId }) => {
     );
   }
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'minor': return 'text-yellow-600 bg-yellow-100';
-      case 'moderate': return 'text-orange-600 bg-orange-100';
-      case 'major': return 'text-red-600 bg-red-100';
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'positive': return 'text-green-600 bg-green-100';
+      case 'suggestion': return 'text-blue-600 bg-blue-100';
+      case 'improvement': return 'text-yellow-600 bg-yellow-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -98,52 +99,39 @@ const Feedback = ({ userId }) => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Session Feedback</h1>
-          <p className="text-gray-600 mt-2">Detailed analysis of your latest practice session</p>
+          <h1 className="text-3xl font-bold text-gray-900">Feedback & Progress</h1>
+          <p className="text-gray-600 mt-2">Your personalized feedback and improvement suggestions</p>
         </div>
 
-        {/* Session Overview */}
+        {/* Feedback Overview */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{sessionData.exerciseType}</h2>
-              <p className="text-gray-600">{sessionData.date} • {sessionData.duration}</p>
+              <h2 className="text-xl font-semibold text-gray-900">Overall Progress</h2>
+              <p className="text-gray-600">Based on your recent practice sessions</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-blue-600">{sessionData.overallScore}%</div>
-              <div className="text-sm text-gray-500">Overall Score</div>
+              <div className="text-3xl font-bold text-blue-600">{feedbackData.averageScore}%</div>
+              <div className="text-sm text-gray-500">Average Score</div>
             </div>
           </div>
           
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <p className="text-lg text-gray-800 font-medium">"{sessionData.targetPhrase}"</p>
-          </div>
-
-          {/* Audio Player */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Recording</h3>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors"
-              >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </button>
-              
-              <div className="flex-1">
-                <div className="bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-                </div>
-                <div className="flex justify-between text-sm text-gray-500 mt-1">
-                  <span>0:07</span>
-                  <span>0:15</span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{feedbackData.total}</div>
+              <div className="text-sm text-gray-600">Total Feedback Items</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                {feedbackData.feedback.filter(f => f.type === 'positive').length}
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Volume2 className="w-5 h-5 text-gray-400" />
-                <input type="range" min="0" max="100" defaultValue="80" className="w-20" />
+              <div className="text-sm text-gray-600">Positive Feedback</div>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">
+                {feedbackData.feedback.filter(f => f.type === 'suggestion').length}
               </div>
+              <div className="text-sm text-gray-600">Suggestions</div>
             </div>
           </div>
         </div>
@@ -154,9 +142,9 @@ const Feedback = ({ userId }) => {
             <nav className="flex space-x-8 px-6">
               {[
                 { id: 'overview', label: 'Overview', icon: '📊' },
-                { id: 'mistakes', label: 'Mistakes', icon: '❌' },
-                { id: 'improvements', label: 'Improvements', icon: '✅' },
-                { id: 'recommendations', label: 'AI Recommendations', icon: '🤖' }
+                { id: 'feedback', label: 'All Feedback', icon: '💬' },
+                { id: 'positive', label: 'Positive', icon: '✅' },
+                { id: 'suggestions', label: 'Suggestions', icon: '💡' }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -178,13 +166,85 @@ const Feedback = ({ userId }) => {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(sessionData.detailedScores).map(([skill, score]) => (
-                    <div key={skill} className="text-center p-4 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600">{score}%</div>
-                      <div className="text-sm text-gray-600 capitalize">{skill.replace(/([A-Z])/g, ' $1')}</div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${score}%` }}></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <h3 className="text-lg font-medium text-blue-900 mb-3">Recent Achievements</h3>
+                    <div className="space-y-3">
+                      {feedbackData.feedback
+                        .filter(f => f.type === 'positive')
+                        .slice(0, 3)
+                        .map((feedback, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <CheckCircle className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                            <div>
+                              <p className="text-blue-800 text-sm">{feedback.message}</p>
+                              <p className="text-blue-600 text-xs mt-1">Score: {feedback.score}%</p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-50 p-6 rounded-lg">
+                    <h3 className="text-lg font-medium text-yellow-900 mb-3">Areas for Improvement</h3>
+                    <div className="space-y-3">
+                      {feedbackData.feedback
+                        .filter(f => f.type === 'suggestion')
+                        .slice(0, 3)
+                        .map((feedback, index) => (
+                          <div key={index} className="flex items-start space-x-3">
+                            <Target className="w-5 h-5 text-yellow-600 mt-1 flex-shrink-0" />
+                            <div>
+                              <p className="text-yellow-800 text-sm">{feedback.message}</p>
+                              <p className="text-yellow-600 text-xs mt-1">Score: {feedback.score}%</p>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* All Feedback Tab */}
+            {activeTab === 'feedback' && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">All Feedback Items</h3>
+                <div className="space-y-4">
+                  {feedbackData.feedback.map((feedback, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          {feedback.type === 'positive' ? (
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                          ) : (
+                            <Target className="w-6 h-6 text-blue-600" />
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {feedback.type === 'positive' ? 'Great Job!' : 'Suggestion'}
+                            </div>
+                            <div className="text-sm text-gray-500">{feedback.date}</div>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(feedback.type)}`}>
+                          {feedback.type}
+                        </span>
+                      </div>
+                      
+                      <p className="text-gray-800 mb-3">{feedback.message}</p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">Score:</span>
+                          <span className="text-lg font-semibold text-blue-600">{feedback.score}%</span>
+                        </div>
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${feedback.score}%` }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -192,103 +252,63 @@ const Feedback = ({ userId }) => {
               </div>
             )}
 
-            {/* Mistakes Tab */}
-            {activeTab === 'mistakes' && (
+            {/* Positive Feedback Tab */}
+            {activeTab === 'positive' && (
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Pronunciation Mistakes</h3>
-                {sessionData.mistakes && sessionData.mistakes.length > 0 ? (
-                  sessionData.mistakes.map((mistake, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <AlertCircle className="w-6 h-6 text-orange-500" />
-                          <div>
-                            <div className="font-medium text-gray-900">{mistake.word}</div>
-                            <div className="text-sm text-gray-500">Minor pronunciation issue</div>
-                          </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(mistake.severity)}`}>
-                          {mistake.severity}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                        <div>
-                          <div className="text-sm font-medium text-gray-700">You Said:</div>
-                          <div className="text-lg font-mono text-red-600">{mistake.userSaid}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-700">Correct:</div>
-                          <div className="text-lg font-mono text-green-600">{mistake.correct}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-700">Suggestion:</div>
-                          <div className="text-sm text-gray-600">{mistake.suggestion}</div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Great job! No pronunciation mistakes found in this session.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Improvements Tab */}
-            {activeTab === 'improvements' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">What You Did Well</h3>
-                {sessionData.improvements && sessionData.improvements.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {sessionData.improvements.map((improvement, index) => (
-                      <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div className="flex items-start space-x-3">
-                          <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
-                          <p className="text-green-800">{improvement}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No specific improvements recorded for this session.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* AI Recommendations Tab */}
-            {activeTab === 'recommendations' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">AI Recommendations</h3>
-                {sessionData.aiRecommendations && sessionData.aiRecommendations.length > 0 ? (
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Positive Feedback</h3>
+                {feedbackData.feedback.filter(f => f.type === 'positive').length > 0 ? (
                   <div className="space-y-4">
-                    {sessionData.aiRecommendations.map((rec, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="text-lg font-medium text-gray-900">{rec.title}</h4>
-                            <p className="text-gray-600">{rec.description}</p>
+                    {feedbackData.feedback
+                      .filter(f => f.type === 'positive')
+                      .map((feedback, index) => (
+                        <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-start space-x-3">
+                            <CheckCircle className="w-6 h-6 text-green-600 mt-1" />
+                            <div className="flex-1">
+                              <p className="text-green-800 mb-2">{feedback.message}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-green-600">{feedback.date}</span>
+                                <span className="text-lg font-semibold text-green-700">{feedback.score}%</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            rec.priority === 'high' ? 'bg-red-100 text-red-700' :
-                            rec.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
-                            {rec.priority} priority
-                          </span>
                         </div>
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                          Start Exercise
-                        </button>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    <p>No AI recommendations available for this session.</p>
+                    <p>No positive feedback available yet. Keep practicing!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Suggestions Tab */}
+            {activeTab === 'suggestions' && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Improvement Suggestions</h3>
+                {feedbackData.feedback.filter(f => f.type === 'suggestion').length > 0 ? (
+                  <div className="space-y-4">
+                    {feedbackData.feedback
+                      .filter(f => f.type === 'suggestion')
+                      .map((feedback, index) => (
+                        <div key={index} className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                          <div className="flex items-start space-x-3">
+                            <Target className="w-6 h-6 text-blue-600 mt-1" />
+                            <div className="flex-1">
+                              <p className="text-blue-800 mb-2">{feedback.message}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-blue-600">{feedback.date}</span>
+                                <span className="text-lg font-semibold text-blue-700">{feedback.score}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No suggestions available at the moment.</p>
                   </div>
                 )}
               </div>

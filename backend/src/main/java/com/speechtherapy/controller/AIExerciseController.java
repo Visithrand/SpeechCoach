@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5000"})
 public class AIExerciseController {
 
     @Autowired
@@ -44,7 +44,8 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
         try {
@@ -56,7 +57,8 @@ public class AIExerciseController {
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Failed to generate exercise: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
+            error.put("message", "Failed to generate exercise. Please try again.");
+            return ResponseEntity.status(500).body(error);
         }
     }
 
@@ -67,7 +69,8 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
         try {
@@ -79,7 +82,8 @@ public class AIExerciseController {
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Failed to generate weekly plan: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(error);
+            error.put("message", "Failed to generate weekly plan. Please try again.");
+            return ResponseEntity.status(500).body(error);
         }
     }
 
@@ -90,14 +94,23 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
-        List<AIExercise> exercises = aiExerciseRepository.findByUserOrderByCreatedAtDesc(userOpt.get());
-        Map<String, Object> response = new HashMap<>();
-        response.put("exercises", exercises);
-        response.put("count", exercises.size());
-        return ResponseEntity.ok(response);
+        try {
+            List<AIExercise> exercises = aiExerciseRepository.findByUserOrderByCreatedAtDesc(userOpt.get());
+            Map<String, Object> response = new HashMap<>();
+            response.put("exercises", exercises);
+            response.put("count", exercises.size());
+            response.put("message", "AI exercises retrieved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch AI exercises: " + e.getMessage());
+            error.put("message", "Failed to fetch AI exercises. Please try again.");
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
     // Get active (unexpired) AI exercises
@@ -107,14 +120,23 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
-        List<AIExercise> activeExercises = aiExerciseRepository.findActiveExercisesByUser(userOpt.get(), LocalDateTime.now());
-        Map<String, Object> response = new HashMap<>();
-        response.put("activeExercises", activeExercises);
-        response.put("count", activeExercises.size());
-        return ResponseEntity.ok(response);
+        try {
+            List<AIExercise> activeExercises = aiExerciseRepository.findActiveExercisesByUser(userOpt.get(), LocalDateTime.now());
+            Map<String, Object> response = new HashMap<>();
+            response.put("activeExercises", activeExercises);
+            response.put("count", activeExercises.size());
+            response.put("message", "Active exercises retrieved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch active exercises: " + e.getMessage());
+            error.put("message", "Failed to fetch active exercises. Please try again.");
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
     // Mark an AI exercise as completed
@@ -127,22 +149,30 @@ public class AIExerciseController {
         if (exerciseOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Exercise not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "Exercise not found with ID: " + exerciseId);
+            return ResponseEntity.status(404).body(error);
         }
         
-        AIExercise exercise = exerciseOpt.get();
-        exercise.setIsCompleted(true);
-        exercise.setCompletedAt(LocalDateTime.now());
-        if (performanceScore != null) {
-            exercise.setPerformanceScore(performanceScore);
+        try {
+            AIExercise exercise = exerciseOpt.get();
+            exercise.setIsCompleted(true);
+            exercise.setCompletedAt(LocalDateTime.now());
+            if (performanceScore != null) {
+                exercise.setPerformanceScore(performanceScore);
+            }
+            
+            aiExerciseRepository.save(exercise);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Exercise marked as completed");
+            response.put("exercise", exercise);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to complete exercise: " + e.getMessage());
+            error.put("message", "Failed to complete exercise. Please try again.");
+            return ResponseEntity.status(500).body(error);
         }
-        
-        aiExerciseRepository.save(exercise);
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Exercise marked as completed");
-        response.put("exercise", exercise);
-        return ResponseEntity.ok(response);
     }
 
     // Get body exercise suggestions
@@ -155,34 +185,59 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
-        List<BodyExercise> suggestions = aiExerciseService.suggestBodyExercises(userOpt.get(), targetArea);
-        Map<String, Object> response = new HashMap<>();
-        response.put("suggestions", suggestions);
-        response.put("count", suggestions.size());
-        return ResponseEntity.ok(response);
+        try {
+            List<BodyExercise> suggestions = aiExerciseService.suggestBodyExercises(userOpt.get(), targetArea);
+            Map<String, Object> response = new HashMap<>();
+            response.put("suggestions", suggestions);
+            response.put("count", suggestions.size());
+            response.put("message", "Body exercises retrieved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch body exercises: " + e.getMessage());
+            error.put("message", "Failed to fetch body exercises. Please try again.");
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
     // Get all body exercises by type
     @GetMapping("/body-exercises/type/{exerciseType}")
     public ResponseEntity<Map<String, Object>> getBodyExercisesByType(@PathVariable String exerciseType) {
-        List<BodyExercise> exercises = bodyExerciseRepository.findByExerciseType(exerciseType);
-        Map<String, Object> response = new HashMap<>();
-        response.put("exercises", exercises);
-        response.put("count", exercises.size());
-        return ResponseEntity.ok(response);
+        try {
+            List<BodyExercise> exercises = bodyExerciseRepository.findByExerciseType(exerciseType);
+            Map<String, Object> response = new HashMap<>();
+            response.put("exercises", exercises);
+            response.put("count", exercises.size());
+            response.put("message", "Body exercises by type retrieved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch body exercises by type: " + e.getMessage());
+            error.put("message", "Failed to fetch body exercises. Please try again.");
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
     // Get body exercises by difficulty level
     @GetMapping("/body-exercises/difficulty/{difficultyLevel}")
     public ResponseEntity<Map<String, Object>> getBodyExercisesByDifficulty(@PathVariable String difficultyLevel) {
-        List<BodyExercise> exercises = bodyExerciseRepository.findByDifficultyLevel(difficultyLevel);
-        Map<String, Object> response = new HashMap<>();
-        response.put("exercises", exercises);
-        response.put("count", exercises.size());
-        return ResponseEntity.ok(response);
+        try {
+            List<BodyExercise> exercises = bodyExerciseRepository.findByDifficultyLevel(difficultyLevel);
+            Map<String, Object> response = new HashMap<>();
+            response.put("exercises", exercises);
+            response.put("count", exercises.size());
+            response.put("message", "Body exercises by difficulty retrieved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch body exercises by difficulty: " + e.getMessage());
+            error.put("message", "Failed to fetch body exercises. Please try again.");
+            return ResponseEntity.status(500).body(error);
+        }
     }
 
     // Get fluency analysis for a user
@@ -192,24 +247,34 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
-        List<FluencyScore> recentScores = fluencyScoreRepository.findByUserOrderBySessionDateDesc(userOpt.get());
-        
-        if (recentScores.isEmpty()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "No fluency data available yet");
-            response.put("scores", recentScores);
-            return ResponseEntity.ok(response);
+        try {
+            List<FluencyScore> recentScores = fluencyScoreRepository.findByUserOrderBySessionDateDesc(userOpt.get());
+            
+            if (recentScores.isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("message", "No fluency data available yet");
+                response.put("scores", recentScores);
+                response.put("count", 0);
+                return ResponseEntity.ok(response);
+            }
+            
+            // Calculate trends and insights
+            Map<String, Object> analysis = analyzeFluencyTrends(recentScores);
+            analysis.put("recentScores", recentScores);
+            analysis.put("totalSessions", recentScores.size());
+            analysis.put("message", "Fluency analysis retrieved successfully");
+            
+            return ResponseEntity.ok(analysis);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to fetch fluency analysis: " + e.getMessage());
+            error.put("message", "Failed to fetch fluency analysis. Please try again.");
+            return ResponseEntity.status(500).body(error);
         }
-        
-        // Calculate trends and insights
-        Map<String, Object> analysis = analyzeFluencyTrends(recentScores);
-        analysis.put("recentScores", recentScores);
-        analysis.put("totalSessions", recentScores.size());
-        
-        return ResponseEntity.ok(analysis);
     }
 
     // Get fluency scores for a specific date range
@@ -223,7 +288,8 @@ public class AIExerciseController {
         if (userOpt.isEmpty()) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "User not found");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "User not found with ID: " + userId);
+            return ResponseEntity.status(404).body(error);
         }
         
         try {
@@ -237,12 +303,14 @@ public class AIExerciseController {
             response.put("scores", scores);
             response.put("count", scores.size());
             response.put("dateRange", Map.of("start", startDate, "end", endDate));
+            response.put("message", "Fluency analysis range retrieved successfully");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Invalid date format. Use ISO format (yyyy-MM-ddTHH:mm:ss)");
-            return ResponseEntity.badRequest().body(error);
+            error.put("message", "Invalid date format. Please use ISO format (yyyy-MM-ddTHH:mm:ss)");
+            return ResponseEntity.status(400).body(error);
         }
     }
 

@@ -1,6 +1,8 @@
 {
   "name": "speech-therapy-frontend",
-  "version": "1.0.0",
+  "version": "0.1.0",
+  "private": true,
+  "proxy": "http://localhost:8080",
   "description": "AI-powered Speech Therapy Assistant Frontend",
   "main": "index.js",
   "scripts": {

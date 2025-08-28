@@ -1,11 +1,12 @@
 package com.speechtherapy.service;
 
-import com.speechtherapy.model.BodyExercise;
-import com.speechtherapy.repository.BodyExerciseRepository;
+import com.speechtherapy.model.*;
+import com.speechtherapy.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,11 +16,119 @@ public class DataSeederService implements CommandLineRunner {
     @Autowired
     private BodyExerciseRepository bodyExerciseRepository;
     
+    @Autowired
+    private ExerciseRepository exerciseRepository;
+    
+    @Autowired
+    private AIExerciseRepository aiExerciseRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
     @Override
     public void run(String... args) throws Exception {
-        if (bodyExerciseRepository.count() == 0) {
-            seedBodyExercises();
+        try {
+            if (bodyExerciseRepository.count() == 0) {
+                seedBodyExercises();
+            }
+            
+            if (exerciseRepository.count() == 0) {
+                seedExercises();
+            }
+            
+            if (aiExerciseRepository.count() == 0) {
+                seedAIExercises();
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error during data seeding: " + e.getMessage());
+            e.printStackTrace();
+            // Don't fail the application if seeding fails
         }
+    }
+    
+    private void seedExercises() {
+        try {
+            // Create a default user if none exists
+            User defaultUser = createDefaultUser();
+            
+            // Create just a few simple exercises to start with
+            List<Exercise> exercises = Arrays.asList(
+                new Exercise(defaultUser, "words", "The quick brown fox"),
+                new Exercise(defaultUser, "sentences", "Practice makes perfect"),
+                new Exercise(defaultUser, "conversations", "Hello, how are you today?")
+            );
+            
+            // Set basic properties for each exercise
+            for (int i = 0; i < exercises.size(); i++) {
+                Exercise ex = exercises.get(i);
+                ex.setDifficultyLevel("Beginner");
+                ex.setOverallScore(80);
+                ex.setAccuracyScore(75);
+                ex.setClarityScore(80);
+                ex.setFluencyScore(75);
+                ex.setFeedback("Good practice! Keep working on your speech clarity.");
+                ex.setSessionDuration(120);
+                ex.setPointsEarned(20);
+                ex.setCompletedAt(null); // Mark as not completed
+            }
+            
+            exerciseRepository.saveAll(exercises);
+            System.out.println("✅ Seeded " + exercises.size() + " speech exercises");
+        } catch (Exception e) {
+            System.err.println("❌ Error seeding exercises: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void seedAIExercises() {
+        try {
+            // Create a default user if none exists
+            User defaultUser = createDefaultUser();
+            
+            // Create just a few simple AI exercises
+            List<AIExercise> aiExercises = Arrays.asList(
+                new AIExercise(
+                    defaultUser,
+                    "Practice saying this sentence clearly: 'The quick brown fox jumps over the lazy dog.'",
+                    "sentence"
+                ),
+                new AIExercise(
+                    defaultUser,
+                    "Tell a short story about your favorite hobby. Speak for 1-2 minutes.",
+                    "story"
+                )
+            );
+            
+            // Set basic properties for each AI exercise
+            aiExercises.get(0).setDifficultyLevel("Beginner");
+            aiExercises.get(0).setTargetPhonemes("th, qu, br, f, j, l, z, d");
+            aiExercises.get(0).setTargetSkills("Pronunciation, Clarity, Pace");
+            aiExercises.get(0).setAiReasoning("This exercise focuses on common English sounds and helps improve overall speech clarity.");
+            
+            aiExercises.get(1).setDifficultyLevel("Intermediate");
+            aiExercises.get(1).setTargetPhonemes("various");
+            aiExercises.get(1).setTargetSkills("Storytelling, Expression, Fluency");
+            aiExercises.get(1).setAiReasoning("This exercise helps develop narrative skills and emotional expression in speech.");
+            
+            aiExerciseRepository.saveAll(aiExercises);
+            System.out.println("✅ Seeded " + aiExercises.size() + " AI exercises");
+        } catch (Exception e) {
+            System.err.println("❌ Error seeding AI exercises: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private User createDefaultUser() {
+        // Check if default user exists
+        return userRepository.findByEmail("demo@speechtherapy.com")
+            .orElseGet(() -> {
+                User user = new User("Demo User", "demo@speechtherapy.com", 25);
+                user.setStreakDays(5);
+                user.setDifficultyLevel("Intermediate");
+                user.setTotalPoints(150);
+                user.setExercisesCompleted(12);
+                return userRepository.save(user);
+            });
     }
     
     private void seedBodyExercises() {

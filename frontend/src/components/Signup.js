@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Loader, CheckCircle } from 'lucide-react';
 import API_CONFIG from '../config/api';
+import './Auth.css';
 
 const Signup = ({ onSignup }) => {
   const [formData, setFormData] = useState({

@@ -1,6 +1,8 @@
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\config\SchedulerConfig.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\User.java
+D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\ExercisesController.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\RedeemCode.java
+D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\FeedbackController.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\repository\ExerciseRepository.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\CompletedExercise.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\repository\CompletedExerciseRepository.java
@@ -15,6 +17,8 @@ D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\repository\FluencyScoreRepository.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\config\SecurityConfig.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\CompletedExerciseController.java
+D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\DashboardController.java
+D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\service\DashboardService.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\repository\UserRepository.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\AdminController.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\UserProgress.java
@@ -23,6 +27,7 @@ D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\service\Co
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\FluencyScore.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\AIExerciseController.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\repository\AIExerciseRepository.java
+D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\controller\AnalyticsController.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\service\WeeklyPlanService.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\AIExercise.java
 D:\speech-therapy\SpeechCoach\backend\src\main\java\com\speechtherapy\model\Exercise.java

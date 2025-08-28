@@ -527,3 +527,397 @@ body {
     transition: none;
   }
 }
+
+/* ===== LOGIN COMPONENT SPECIFIC STYLES ===== */
+
+/* Login Container */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Logo and Title Section */
+.text-center {
+  text-align: center;
+}
+
+.mb-8 {
+  margin-bottom: 2rem;
+}
+
+.w-16 {
+  width: 4rem;
+}
+
+.h-16 {
+  height: 4rem;
+}
+
+.rounded-2xl {
+  border-radius: 1rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+/* Card Styles */
+.card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* Form Styles */
+.space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.inset-y-0 {
+  top: 0;
+  bottom: 0;
+}
+
+.left-0 {
+  left: 0;
+}
+
+.pl-3 {
+  padding-left: 0.75rem;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.h-5 {
+  height: 1.25rem;
+}
+
+.w-5 {
+  width: 1.25rem;
+}
+
+.text-secondary {
+  color: #6b7280;
+}
+
+/* Input Styles */
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  background: white;
+  color: #374151;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pl-10 {
+  padding-left: 2.5rem;
+}
+
+.pr-12 {
+  padding-right: 3rem;
+}
+
+/* Password Toggle Button */
+.right-0 {
+  right: 0;
+}
+
+.pr-3 {
+  padding-right: 0.75rem;
+}
+
+/* Remember Me Section */
+.justify-between {
+  justify-content: space-between;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.block {
+  display: block;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-primary {
+  color: #3b82f6;
+}
+
+.hover\:text-primary-dark:hover {
+  color: #2563eb;
+}
+
+.transition-colors {
+  transition: color 0.2s;
+}
+
+/* Checkbox Styles */
+.h-4 {
+  height: 1rem;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+.focus\:ring-primary:focus {
+  --tw-ring-color: #3b82f6;
+}
+
+.border-border {
+  border-color: #d1d5db;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+/* Error Message */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.alert-danger {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-primary:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+/* Loading State */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+/* Divider */
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.border-t {
+  border-top-width: 1px;
+}
+
+.border-border {
+  border-color: #d1d5db;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+/* Social Login Buttons */
+.grid {
+  display: grid;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+/* Sign Up Link */
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+/* Footer */
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
+/* Icon Alignment Fixes */
+.relative .absolute.inset-y-0.left-0.pl-3.flex.items-center.pointer-events-none {
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.relative .absolute.inset-y-0.right-0.pr-3.flex.items-center {
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+/* Remember me checkbox alignment */
+.flex.items-center input[type="checkbox"] {
+  margin: 0;
+  vertical-align: middle;
+}
+
+.flex.items-center label {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.flex.items-center label .inline {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}

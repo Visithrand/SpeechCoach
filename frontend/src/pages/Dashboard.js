@@ -4,7 +4,7 @@ import {
   TrendingUp, Clock, Flame, Trophy, Play, 
   Target, Mic, Calendar, Loader, AlertCircle 
 } from 'lucide-react';
-import axios from 'axios';
+import API_CONFIG from '../config/api';
 
 function Dashboard({ userId }) {
   const [dashboardData, setDashboardData] = useState(null);
@@ -20,11 +20,16 @@ function Dashboard({ userId }) {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`/api/dashboard/${userId}`);
-      setDashboardData(response.data);
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.DASHBOARD.MAIN(userId)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDashboardData(data);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err.response?.data?.message || 'Failed to fetch dashboard data. Please try again.');
+      setError(err.message || 'Failed to fetch dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }

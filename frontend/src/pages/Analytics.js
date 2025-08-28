@@ -8,7 +8,7 @@ import {
   TrendingUp, Target, BarChart3, PieChart as PieChartIcon, 
   Activity, Calendar, Clock, Award, TrendingDown, AlertCircle, Loader
 } from 'lucide-react';
-import axios from 'axios';
+import API_CONFIG from '../config/api';
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -34,18 +34,16 @@ const Analytics = () => {
       // Get user ID from localStorage or context (adjust based on your auth implementation)
       const userId = localStorage.getItem('userId') || 'current-user';
       
-      const response = await axios.get(`/api/analytics/${userId}`, {
-        params: {
-          timeRange,
-          exerciseType: filters.exerciseType,
-          difficulty: filters.difficulty
-        }
-      });
-      
-      setAnalyticsData(response.data);
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/analytics/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAnalyticsData(data);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
     } catch (err) {
       console.error('Error fetching analytics data:', err);
-      setError(err.response?.data?.message || 'Failed to fetch analytics data. Please try again.');
+      setError(err.message || 'Failed to fetch analytics data. Please try again.');
     } finally {
       setLoading(false);
     }

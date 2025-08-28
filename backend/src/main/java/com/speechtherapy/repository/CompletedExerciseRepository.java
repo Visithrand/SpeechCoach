@@ -2,6 +2,7 @@ package com.speechtherapy.repository;
 
 import com.speechtherapy.model.CompletedExercise;
 import com.speechtherapy.model.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,4 +61,22 @@ public interface CompletedExerciseRepository extends JpaRepository<CompletedExer
      * Count completed exercises by user
      */
     long countByUser(User user);
+    
+    /**
+     * Get recent completed exercises for dashboard (last 5)
+     */
+    @Query("SELECT ce FROM CompletedExercise ce WHERE ce.user = :user ORDER BY ce.completedAt DESC")
+    List<CompletedExercise> findRecentExercisesByUser(@Param("user") User user, Pageable pageable);
+    
+    /**
+     * Get total practice time in minutes for a user in a date range
+     */
+    @Query("SELECT COALESCE(SUM(ce.durationSeconds), 0) FROM CompletedExercise ce WHERE ce.user = :user AND ce.practiceDate BETWEEN :startDate AND :endDate")
+    Long getTotalPracticeTimeInSeconds(@Param("user") User user, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    /**
+     * Get exercise count by type for a user in a date range
+     */
+    @Query("SELECT ce.exerciseType, COUNT(ce) FROM CompletedExercise ce WHERE ce.user = :user AND ce.practiceDate BETWEEN :startDate AND :endDate GROUP BY ce.exerciseType")
+    List<Object[]> getExerciseCountByTypeInRange(@Param("user") User user, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
