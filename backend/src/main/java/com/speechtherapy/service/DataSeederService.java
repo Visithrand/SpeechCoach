@@ -28,17 +28,30 @@ public class DataSeederService implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         try {
-            if (bodyExerciseRepository.count() == 0) {
-                seedBodyExercises();
+            System.out.println("🚀 Starting data seeding process...");
+            
+        if (bodyExerciseRepository.count() == 0) {
+                System.out.println("📝 Seeding body exercises...");
+            seedBodyExercises();
+            } else {
+                System.out.println("✅ Body exercises already exist: " + bodyExerciseRepository.count());
             }
             
             if (exerciseRepository.count() == 0) {
+                System.out.println("📝 Seeding speech exercises...");
                 seedExercises();
+            } else {
+                System.out.println("✅ Speech exercises already exist: " + exerciseRepository.count());
             }
             
             if (aiExerciseRepository.count() == 0) {
+                System.out.println("📝 Seeding AI exercises...");
                 seedAIExercises();
+            } else {
+                System.out.println("✅ AI exercises already exist: " + aiExerciseRepository.count());
             }
+            
+            System.out.println("🎉 Data seeding completed successfully!");
         } catch (Exception e) {
             System.err.println("❌ Error during data seeding: " + e.getMessage());
             e.printStackTrace();
