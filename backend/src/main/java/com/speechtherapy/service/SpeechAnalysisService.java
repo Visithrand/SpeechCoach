@@ -175,7 +175,8 @@ public class SpeechAnalysisService {
     }
     
     private Exercise saveExerciseRecord(User user, String exerciseType, String targetText, Map<String, Object> analysisResult) {
-        Exercise exercise = new Exercise(user, exerciseType, targetText);
+        Exercise exercise = new Exercise(user, "Speech Practice", "Intermediate", "Speech", 5, 
+            "Practice " + exerciseType + " with target text: " + targetText);
         
         exercise.setOverallScore((Integer) analysisResult.get("overallScore"));
         exercise.setAccuracyScore((Integer) analysisResult.get("accuracyScore"));

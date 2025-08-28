@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5000"})
 public class AuthController {
     
     @GetMapping("/test")
@@ -128,6 +128,7 @@ public class AuthController {
             
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User created successfully");
+            response.put("token", "demo-token-" + System.currentTimeMillis()); // Added token for signup
             response.put("user", savedUser);
             return ResponseEntity.ok(response);
             

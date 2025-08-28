@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/exercises")
@@ -166,6 +168,162 @@ public class ExercisesController {
             error.put("message", "Failed to submit exercise: " + e.getMessage());
             error.put("error", "SUBMISSION_ERROR");
             return ResponseEntity.status(500).body(error);
+        }
+    }
+
+    @PostMapping("/{exerciseId}/complete")
+    public ResponseEntity<Map<String, Object>> completeExercise(
+            @PathVariable Long exerciseId,
+            @RequestParam Long userId,
+            @RequestParam(required = false) Integer score,
+            @RequestParam(required = false) String feedback) {
+        
+        try {
+            Optional<Exercise> exerciseOpt = exerciseRepository.findById(exerciseId);
+            if (exerciseOpt.isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("error", true);
+                response.put("message", "Exercise not found");
+                return ResponseEntity.notFound().build();
+            }
+            
+            Exercise exercise = exerciseOpt.get();
+            exercise.setCompleted(true);
+            exercise.setCompletedAt(LocalDateTime.now());
+            exercise.setLastAttemptDate(LocalDateTime.now());
+            exercise.setAttemptsCount(exercise.getAttemptsCount() + 1);
+            
+            if (score != null) {
+                exercise.setOverallScore(score);
+                if (score > exercise.getBestScore()) {
+                    exercise.setBestScore(score);
+                }
+            }
+            
+            if (feedback != null) {
+                exercise.setFeedback(feedback);
+            }
+            
+            // Calculate progress percentage based on category
+            List<Exercise> categoryExercises = exerciseRepository.findByUserAndCategoryAndType(
+                exercise.getUser(), exercise.getCategory(), exercise.getType());
+            
+            long completedCount = categoryExercises.stream()
+                .filter(Exercise::getCompleted)
+                .count();
+            
+            int progressPercentage = (int) ((completedCount * 100) / categoryExercises.size());
+            exercise.setProgressPercentage(progressPercentage);
+            
+            exerciseRepository.save(exercise);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Well done! You have completed this exercise");
+            response.put("exercise", exercise);
+            response.put("progressPercentage", progressPercentage);
+            response.put("completedCount", completedCount);
+            response.put("totalCount", categoryExercises.size());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", true);
+            response.put("message", "Failed to complete exercise: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    @GetMapping("/{userId}/progress")
+    public ResponseEntity<Map<String, Object>> getUserProgress(@PathVariable Long userId) {
+        try {
+            List<Exercise> userExercises = exerciseRepository.findByUserId(userId);
+            
+            Map<String, Object> progress = new HashMap<>();
+            
+            // Overall progress
+            long totalExercises = userExercises.size();
+            long completedExercises = userExercises.stream().filter(Exercise::getCompleted).count();
+            int overallProgress = totalExercises > 0 ? (int) ((completedExercises * 100) / totalExercises) : 0;
+            
+            progress.put("overallProgress", overallProgress);
+            progress.put("totalExercises", totalExercises);
+            progress.put("completedExercises", completedExercises);
+            
+            // Progress by category
+            Map<String, Object> categoryProgress = new HashMap<>();
+            Arrays.asList("Beginner", "Intermediate", "Advanced").forEach(category -> {
+                long categoryTotal = userExercises.stream()
+                    .filter(e -> e.getCategory().equals(category))
+                    .count();
+                long categoryCompleted = userExercises.stream()
+                    .filter(e -> e.getCategory().equals(category) && e.getCompleted())
+                    .count();
+                int categoryPercentage = categoryTotal > 0 ? (int) ((categoryCompleted * 100) / categoryTotal) : 0;
+                
+                Map<String, Object> catProgress = new HashMap<>();
+                catProgress.put("total", categoryTotal);
+                catProgress.put("completed", categoryCompleted);
+                catProgress.put("percentage", categoryPercentage);
+                categoryProgress.put(category, catProgress);
+            });
+            
+            progress.put("categoryProgress", categoryProgress);
+            
+            // Progress by type
+            Map<String, Object> typeProgress = new HashMap<>();
+            Arrays.asList("Body", "Speech").forEach(type -> {
+                long typeTotal = userExercises.stream()
+                    .filter(e -> e.getType().equals(type))
+                    .count();
+                long typeCompleted = userExercises.stream()
+                    .filter(e -> e.getType().equals(type) && e.getCompleted())
+                    .count();
+                int typePercentage = typeTotal > 0 ? (int) ((typeCompleted * 100) / typeTotal) : 0;
+                
+                Map<String, Object> typeProg = new HashMap<>();
+                typeProg.put("total", typeTotal);
+                typeProg.put("completed", typeCompleted);
+                typeProg.put("percentage", typePercentage);
+                typeProgress.put(type, typeProg);
+            });
+            
+            progress.put("typeProgress", typeProgress);
+            
+            return ResponseEntity.ok(progress);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", true);
+            response.put("message", "Failed to get user progress: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Map<String, Object>> getAllExercisesFormatted() {
+        try {
+            List<Exercise> allExercises = exerciseRepository.findAll();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalExercises", allExercises.size());
+            
+            // Group exercises by type
+            Map<String, List<Exercise>> exercisesByType = allExercises.stream()
+                .collect(Collectors.groupingBy(Exercise::getType));
+            
+            response.put("bodyExercises", exercisesByType.getOrDefault("Body", new ArrayList<>()));
+            response.put("speechExercises", exercisesByType.getOrDefault("Speech", new ArrayList<>()));
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", true);
+            response.put("message", "Failed to fetch exercises: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

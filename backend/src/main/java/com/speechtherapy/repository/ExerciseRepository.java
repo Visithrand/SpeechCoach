@@ -29,4 +29,19 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
     
     @Query("SELECT e FROM Exercise e WHERE e.user = :user ORDER BY e.overallScore DESC LIMIT 10")
     List<Exercise> findTopExercisesByScore(@Param("user") User user);
+    
+    // New methods for progress tracking
+    List<Exercise> findByUserId(Long userId);
+    
+    List<Exercise> findByUserAndCategoryAndType(User user, String category, String type);
+    
+    List<Exercise> findByUserAndType(User user, String type);
+    
+    List<Exercise> findByUserAndCategory(User user, String category);
+    
+    @Query("SELECT COUNT(e) FROM Exercise e WHERE e.user = :user AND e.completed = true")
+    Long countCompletedByUser(@Param("user") User user);
+    
+    @Query("SELECT COUNT(e) FROM Exercise e WHERE e.user = :user AND e.completed = false")
+    Long countIncompleteByUser(@Param("user") User user);
 }

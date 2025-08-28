@@ -1,5 +1,4 @@
 com\speechtherapy\model\RedeemCode.class
-com\speechtherapy\service\DataSeederService.class
 com\speechtherapy\service\UserService.class
 com\speechtherapy\repository\WeeklyPlanRepository.class
 com\speechtherapy\model\Exercise.class
@@ -25,7 +24,6 @@ com\speechtherapy\repository\AIExerciseRepository.class
 com\speechtherapy\controller\AnalyticsController.class
 com\speechtherapy\model\BodyExercise.class
 com\speechtherapy\repository\CompletedExerciseRepository.class
-com\speechtherapy\service\SpeechAnalysisService.class
 com\speechtherapy\model\AIExercise.class
 com\speechtherapy\service\CompletedExerciseService.class
 com\speechtherapy\service\DashboardService.class
@@ -36,7 +34,6 @@ com\speechtherapy\model\CompletedExercise.class
 com\speechtherapy\service\WeeklyPlanService.class
 com\speechtherapy\config\WebConfig.class
 com\speechtherapy\model\FluencyScore.class
-com\speechtherapy\controller\SpeechAnalysisController.class
 com\speechtherapy\controller\WeeklyPlanController.class
 com\speechtherapy\repository\ExerciseRepository.class
 com\speechtherapy\repository\FluencyScoreRepository.class

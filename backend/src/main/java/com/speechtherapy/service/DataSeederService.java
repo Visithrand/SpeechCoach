@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
 public class DataSeederService implements CommandLineRunner {
     
     @Autowired
-    private BodyExerciseRepository bodyExerciseRepository;
+    private UserRepository userRepository;
     
     @Autowired
     private ExerciseRepository exerciseRepository;
@@ -22,117 +21,37 @@ public class DataSeederService implements CommandLineRunner {
     @Autowired
     private AIExerciseRepository aiExerciseRepository;
     
-    @Autowired
-    private UserRepository userRepository;
-    
     @Override
     public void run(String... args) throws Exception {
         try {
-            System.out.println("🚀 Starting data seeding process...");
+            System.out.println("🚀 Starting comprehensive data seeding process...");
             
-        if (bodyExerciseRepository.count() == 0) {
-                System.out.println("📝 Seeding body exercises...");
-            seedBodyExercises();
-            } else {
-                System.out.println("✅ Body exercises already exist: " + bodyExerciseRepository.count());
-            }
+            // Create default user if not exists
+            User defaultUser = createDefaultUser();
             
+            // Seed exercises
             if (exerciseRepository.count() == 0) {
-                System.out.println("📝 Seeding speech exercises...");
-                seedExercises();
+                System.out.println("📝 Seeding comprehensive exercises...");
+                seedExercises(defaultUser);
             } else {
-                System.out.println("✅ Speech exercises already exist: " + exerciseRepository.count());
+                System.out.println("✅ Exercises already exist: " + exerciseRepository.count());
             }
             
             if (aiExerciseRepository.count() == 0) {
                 System.out.println("📝 Seeding AI exercises...");
-                seedAIExercises();
+                seedAIExercises(defaultUser);
             } else {
                 System.out.println("✅ AI exercises already exist: " + aiExerciseRepository.count());
             }
             
-            System.out.println("🎉 Data seeding completed successfully!");
+            System.out.println("🎉 Comprehensive data seeding completed successfully!");
         } catch (Exception e) {
             System.err.println("❌ Error during data seeding: " + e.getMessage());
             e.printStackTrace();
-            // Don't fail the application if seeding fails
         }
     }
-    
-    private void seedExercises() {
-        try {
-            // Create a default user if none exists
-            User defaultUser = createDefaultUser();
-            
-            // Create just a few simple exercises to start with
-            List<Exercise> exercises = Arrays.asList(
-                new Exercise(defaultUser, "words", "The quick brown fox"),
-                new Exercise(defaultUser, "sentences", "Practice makes perfect"),
-                new Exercise(defaultUser, "conversations", "Hello, how are you today?")
-            );
-            
-            // Set basic properties for each exercise
-            for (int i = 0; i < exercises.size(); i++) {
-                Exercise ex = exercises.get(i);
-                ex.setDifficultyLevel("Beginner");
-                ex.setOverallScore(80);
-                ex.setAccuracyScore(75);
-                ex.setClarityScore(80);
-                ex.setFluencyScore(75);
-                ex.setFeedback("Good practice! Keep working on your speech clarity.");
-                ex.setSessionDuration(120);
-                ex.setPointsEarned(20);
-                ex.setCompletedAt(null); // Mark as not completed
-            }
-            
-            exerciseRepository.saveAll(exercises);
-            System.out.println("✅ Seeded " + exercises.size() + " speech exercises");
-        } catch (Exception e) {
-            System.err.println("❌ Error seeding exercises: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    private void seedAIExercises() {
-        try {
-            // Create a default user if none exists
-            User defaultUser = createDefaultUser();
-            
-            // Create just a few simple AI exercises
-            List<AIExercise> aiExercises = Arrays.asList(
-                new AIExercise(
-                    defaultUser,
-                    "Practice saying this sentence clearly: 'The quick brown fox jumps over the lazy dog.'",
-                    "sentence"
-                ),
-                new AIExercise(
-                    defaultUser,
-                    "Tell a short story about your favorite hobby. Speak for 1-2 minutes.",
-                    "story"
-                )
-            );
-            
-            // Set basic properties for each AI exercise
-            aiExercises.get(0).setDifficultyLevel("Beginner");
-            aiExercises.get(0).setTargetPhonemes("th, qu, br, f, j, l, z, d");
-            aiExercises.get(0).setTargetSkills("Pronunciation, Clarity, Pace");
-            aiExercises.get(0).setAiReasoning("This exercise focuses on common English sounds and helps improve overall speech clarity.");
-            
-            aiExercises.get(1).setDifficultyLevel("Intermediate");
-            aiExercises.get(1).setTargetPhonemes("various");
-            aiExercises.get(1).setTargetSkills("Storytelling, Expression, Fluency");
-            aiExercises.get(1).setAiReasoning("This exercise helps develop narrative skills and emotional expression in speech.");
-            
-            aiExerciseRepository.saveAll(aiExercises);
-            System.out.println("✅ Seeded " + aiExercises.size() + " AI exercises");
-        } catch (Exception e) {
-            System.err.println("❌ Error seeding AI exercises: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
+
     private User createDefaultUser() {
-        // Check if default user exists
         return userRepository.findByEmail("demo@speechtherapy.com")
             .orElseGet(() -> {
                 User user = new User("Demo User", "demo@speechtherapy.com", 25);
@@ -143,212 +62,406 @@ public class DataSeederService implements CommandLineRunner {
                 return userRepository.save(user);
             });
     }
-    
-    private void seedBodyExercises() {
-        List<BodyExercise> exercises = Arrays.asList(
-            // BEGINNER LEVEL EXERCISES (5 exercises)
+
+    private void seedExercises(User user) {
+        List<Exercise> exercises = Arrays.asList(
+            // ===============================
+            // BODY EXERCISES - BEGINNER (Breathing Focus)
+            // ===============================
+            new Exercise(user, "Deep Breathing Exercise", "Beginner", "Body", 5,
+                "1. Sit comfortably with your back straight\n" +
+                "2. Place one hand on your chest and one on your stomach\n" +
+                "3. Breathe in slowly through your nose for 4 counts\n" +
+                "4. Hold for 2 counts\n" +
+                "5. Exhale slowly through your mouth for 6 counts\n" +
+                "6. Repeat 10 times"),
             
-            // 1. Deep Breathing
-            new BodyExercise(
-                "Deep Breathing for Speech",
-                "breathing",
-                "beginner",
-                "Simple breathing exercise to improve breath control for speech",
-                "1. Sit comfortably with your back straight\n2. Place one hand on your chest, one on your stomach\n3. Breathe in slowly through your nose for 4 counts\n4. Hold for 2 counts\n5. Exhale slowly through your mouth for 6 counts\n6. Repeat 5 times",
-                60,
-                5,
-                "Diaphragm, Lungs",
-                "Improves breath control, reduces speech anxiety, increases vocal power"
-            ),
+            new Exercise(user, "4-7-8 Breathing", "Beginner", "Body", 4,
+                "1. Sit in a comfortable position\n" +
+                "2. Inhale through nose for 4 counts\n" +
+                "3. Hold breath for 7 counts\n" +
+                "4. Exhale through mouth for 8 counts\n" +
+                "5. Repeat 5 times"),
             
-            // 2. Lip Stretches
-            new BodyExercise(
-                "Lip Stretches",
-                "facial",
-                "beginner",
-                "Gentle lip exercises to improve articulation",
-                "1. Pucker your lips like you're going to kiss\n2. Hold for 3 seconds\n3. Smile widely, showing your teeth\n4. Hold for 3 seconds\n5. Alternate between pucker and smile\n6. Repeat 10 times",
-                45,
-                10,
-                "Lips, Facial muscles",
-                "Improves lip mobility, enhances articulation of labial sounds (p, b, m, w)"
-            ),
+            new Exercise(user, "Box Breathing", "Beginner", "Body", 6,
+                "1. Inhale for 4 counts\n" +
+                "2. Hold for 4 counts\n" +
+                "3. Exhale for 4 counts\n" +
+                "4. Hold empty for 4 counts\n" +
+                "5. Repeat 8 times"),
             
-            // 3. Tongue Twists
-            new BodyExercise(
-                "Tongue Twists",
-                "tongue",
-                "beginner",
-                "Basic tongue exercises for better articulation",
-                "1. Stick your tongue out as far as possible\n2. Hold for 3 seconds\n3. Move tongue to the right corner of your mouth\n4. Hold for 3 seconds\n5. Move to the left corner\n6. Hold for 3 seconds\n7. Return to center\n8. Repeat 5 times",
-                60,
-                5,
-                "Tongue, Jaw",
-                "Improves tongue flexibility, enhances articulation of lingual sounds (t, d, l, n)"
-            ),
+            new Exercise(user, "Diaphragmatic Breathing", "Beginner", "Body", 5,
+                "1. Lie on your back with knees bent\n" +
+                "2. Place hands on stomach\n" +
+                "3. Breathe in so stomach rises\n" +
+                "4. Breathe out so stomach falls\n" +
+                "5. Practice for 5 minutes"),
             
-            // 4. Jaw Relaxation
-            new BodyExercise(
-                "Jaw Relaxation",
-                "jaw",
-                "beginner",
-                "Gentle jaw exercises to reduce tension",
-                "1. Place your fingertips on your jaw joints\n2. Open your mouth slowly and widely\n3. Hold for 3 seconds\n4. Close slowly\n5. Repeat 5 times\n6. Then gently massage your jaw in circular motions",
-                90,
-                5,
-                "Jaw muscles, Temporomandibular joint",
-                "Reduces jaw tension, improves mouth opening, enhances speech clarity"
-            ),
+            new Exercise(user, "Equal Breathing", "Beginner", "Body", 4,
+                "1. Inhale for 4 counts\n" +
+                "2. Exhale for 4 counts\n" +
+                "3. Keep breaths equal length\n" +
+                "4. Practice for 4 minutes"),
             
-            // 5. Humming Exercise
-            new BodyExercise(
-                "Humming for Voice",
-                "vocal",
-                "beginner",
-                "Simple vocal warm-up exercise",
-                "1. Close your lips gently\n2. Take a deep breath\n3. Hum 'mmmm' on a comfortable pitch\n4. Feel the vibration in your lips and face\n5. Hold for 10 seconds\n6. Repeat 3 times",
-                60,
-                3,
-                "Vocal cords, Lips, Facial muscles",
-                "Warms up vocal cords, improves resonance, reduces vocal strain"
-            ),
+            new Exercise(user, "Progressive Relaxation Breathing", "Beginner", "Body", 6,
+                "1. Start with deep breath\n" +
+                "2. Tense shoulders for 5 seconds\n" +
+                "3. Release tension with exhale\n" +
+                "4. Move to arms, then legs\n" +
+                "5. Practice for 6 minutes"),
             
-            // INTERMEDIATE LEVEL EXERCISES (5 exercises)
+            new Exercise(user, "Alternate Nostril Breathing", "Beginner", "Body", 5,
+                "1. Close right nostril with thumb\n" +
+                "2. Inhale through left nostril\n" +
+                "3. Close left nostril, open right\n" +
+                "4. Exhale through right nostril\n" +
+                "5. Repeat 10 times"),
             
-            // 6. Diaphragmatic Breathing
-            new BodyExercise(
-                "Diaphragmatic Breathing",
-                "breathing",
-                "intermediate",
-                "Advanced breathing technique for speech projection",
-                "1. Lie on your back with knees bent\n2. Place a book on your stomach\n3. Breathe in deeply - the book should rise\n4. Breathe out - the book should fall\n5. Practice for 2 minutes\n6. Then practice while sitting and standing",
-                120,
-                3,
-                "Diaphragm, Abdominal muscles",
-                "Improves breath support, increases vocal projection, reduces vocal fatigue"
-            ),
+            new Exercise(user, "Humming Bee Breath", "Beginner", "Body", 4,
+                "1. Close your eyes\n" +
+                "2. Inhale deeply through nose\n" +
+                "3. Exhale while humming 'mmmm'\n" +
+                "4. Feel the vibration in your chest\n" +
+                "5. Practice for 4 minutes"),
             
-            // 7. Facial Muscle Control
-            new BodyExercise(
-                "Facial Muscle Control",
-                "facial",
-                "intermediate",
-                "Advanced facial muscle exercises for expression",
-                "1. Raise your eyebrows as high as possible\n2. Hold for 3 seconds\n3. Frown deeply\n4. Hold for 3 seconds\n5. Puff out your cheeks\n6. Hold for 3 seconds\n7. Suck in your cheeks\n8. Hold for 3 seconds\n9. Repeat sequence 5 times",
-                90,
-                5,
-                "Facial muscles, Forehead, Cheeks",
-                "Improves facial expression, enhances communication, reduces muscle tension"
-            ),
+            new Exercise(user, "Ocean Breath", "Beginner", "Body", 5,
+                "1. Inhale through nose\n" +
+                "2. Exhale through nose with 'haaa' sound\n" +
+                "3. Create ocean wave sound\n" +
+                "4. Focus on the sound\n" +
+                "5. Practice for 5 minutes"),
             
-            // 8. Tongue Precision
-            new BodyExercise(
-                "Tongue Precision",
-                "tongue",
-                "intermediate",
-                "Advanced tongue exercises for precise articulation",
-                "1. Touch the tip of your tongue to your upper lip\n2. Hold for 2 seconds\n3. Touch the tip to your lower lip\n4. Hold for 2 seconds\n5. Touch the tip to the roof of your mouth\n6. Hold for 2 seconds\n7. Touch the tip to your teeth\n8. Repeat sequence 8 times",
-                75,
-                8,
-                "Tongue, Mouth muscles",
-                "Improves tongue precision, enhances articulation, strengthens mouth muscles"
-            ),
+            new Exercise(user, "Cooling Breath", "Beginner", "Body", 3,
+                "1. Curl tongue like a tube\n" +
+                "2. Inhale through curled tongue\n" +
+                "3. Close mouth and exhale through nose\n" +
+                "4. Repeat 8 times"),
             
-            // 9. Jaw Strengthening
-            new BodyExercise(
-                "Jaw Strengthening",
-                "jaw",
-                "intermediate",
-                "Strengthening exercises for jaw muscles",
-                "1. Place your fist under your chin\n2. Open your mouth against the resistance\n3. Hold for 5 seconds\n4. Close your mouth\n5. Repeat 8 times\n6. Then place your fist on your forehead\n7. Try to open your mouth against it\n8. Repeat 8 times",
-                120,
-                8,
-                "Jaw muscles, Neck muscles",
-                "Strengthens jaw muscles, improves chewing, enhances speech stability"
-            ),
+            new Exercise(user, "Victorious Breath", "Beginner", "Body", 4,
+                "1. Inhale through nose\n" +
+                "2. Exhale through mouth with 'haaa'\n" +
+                "3. Feel the power in your breath\n" +
+                "4. Practice for 4 minutes"),
             
-            // 10. Vocal Resonance
-            new BodyExercise(
-                "Vocal Resonance",
-                "vocal",
-                "intermediate",
-                "Advanced vocal exercises for better resonance",
-                "1. Say 'mmmm' on different pitches (low, medium, high)\n2. Hold each pitch for 5 seconds\n3. Then say 'nnnn' on the same pitches\n4. Finally say 'ng' (like in 'sing') on the same pitches\n5. Feel the vibration in different parts of your face\n6. Repeat each sound 3 times",
-                90,
-                3,
-                "Vocal cords, Facial bones, Sinuses",
-                "Improves vocal resonance, enhances voice quality, increases vocal range"
-            ),
+            new Exercise(user, "Gentle Breathing", "Beginner", "Body", 5,
+                "1. Breathe naturally\n" +
+                "2. Focus on gentle inhale\n" +
+                "3. Notice gentle exhale\n" +
+                "4. Don't force the breath\n" +
+                "5. Practice for 5 minutes"),
+
+            // ===============================
+            // BODY EXERCISES - INTERMEDIATE (Advanced Breathing)
+            // ===============================
+            new Exercise(user, "Extended Exhale Breathing", "Intermediate", "Body", 7,
+                "1. Inhale for 4 counts\n" +
+                "2. Exhale for 8 counts\n" +
+                "3. Gradually increase exhale to 10 counts\n" +
+                "4. Practice for 7 minutes"),
             
-            // ADVANCED LEVEL EXERCISES (5 exercises)
+            new Exercise(user, "Breath Retention Practice", "Intermediate", "Body", 8,
+                "1. Inhale for 4 counts\n" +
+                "2. Hold for 8 counts\n" +
+                "3. Exhale for 8 counts\n" +
+                "4. Hold empty for 4 counts\n" +
+                "5. Practice for 8 minutes"),
             
-            // 11. Circular Breathing
-            new BodyExercise(
-                "Circular Breathing",
-                "breathing",
-                "advanced",
-                "Advanced breathing technique for continuous speech",
-                "1. Take a deep breath through your nose\n2. Start exhaling through your mouth\n3. While exhaling, quickly inhale through your nose\n4. Continue exhaling the air from your mouth\n5. Practice with a straw in water\n6. Aim for continuous bubbles",
-                180,
-                5,
-                "Diaphragm, Lungs, Mouth",
-                "Enables continuous speech, improves breath control, enhances vocal endurance"
-            ),
+            new Exercise(user, "Rhythmic Breathing", "Intermediate", "Body", 6,
+                "1. Inhale for 6 counts\n" +
+                "2. Hold for 3 counts\n" +
+                "3. Exhale for 6 counts\n" +
+                "4. Hold empty for 3 counts\n" +
+                "5. Practice for 6 minutes"),
             
-            // 12. Facial Expression Mastery
-            new BodyExercise(
-                "Facial Expression Mastery",
-                "facial",
-                "advanced",
-                "Complex facial muscle coordination",
-                "1. Practice exaggerated expressions: surprise, anger, joy, sadness\n2. Hold each expression for 5 seconds\n3. Transition smoothly between expressions\n4. Add vocal sounds to each expression\n5. Practice in front of a mirror\n6. Repeat sequence 3 times",
-                150,
-                3,
-                "All facial muscles, Expression muscles",
-                "Improves emotional expression, enhances communication, strengthens facial muscles"
-            ),
+            new Exercise(user, "Three-Part Breath", "Intermediate", "Body", 7,
+                "1. Fill lower lungs (belly expands)\n" +
+                "2. Fill middle lungs (ribs expand)\n" +
+                "3. Fill upper lungs (chest expands)\n" +
+                "4. Exhale in reverse order\n" +
+                "5. Practice for 7 minutes"),
             
-            // 13. Tongue Acrobatics
-            new BodyExercise(
-                "Tongue Acrobatics",
-                "tongue",
-                "advanced",
-                "Complex tongue movements for advanced articulation",
-                "1. Roll your tongue into a tube\n2. Hold for 3 seconds\n3. Touch your tongue to your nose\n4. Hold for 3 seconds\n5. Touch your tongue to your chin\n6. Hold for 3 seconds\n7. Move tongue in figure-8 pattern\n8. Repeat sequence 5 times",
-                120,
-                5,
-                "Tongue, Mouth muscles, Coordination",
-                "Improves tongue dexterity, enhances complex articulation, strengthens coordination"
-            ),
+            new Exercise(user, "Breath Counting", "Intermediate", "Body", 8,
+                "1. Count each breath cycle\n" +
+                "2. Count to 10, then start over\n" +
+                "3. If mind wanders, start over\n" +
+                "4. Focus on the counting\n" +
+                "5. Practice for 8 minutes"),
             
-            // 14. Jaw Mobility
-            new BodyExercise(
-                "Jaw Mobility",
-                "jaw",
-                "advanced",
-                "Advanced jaw movement exercises",
-                "1. Open your mouth as wide as possible\n2. Hold for 5 seconds\n3. Move your jaw to the right\n4. Hold for 3 seconds\n5. Move to the left\n6. Hold for 3 seconds\n7. Move forward\n8. Hold for 3 seconds\n9. Return to center\n10. Repeat sequence 5 times",
-                150,
-                5,
-                "Jaw muscles, Temporomandibular joint, Neck",
-                "Improves jaw mobility, reduces jaw tension, enhances speech articulation"
-            ),
+            new Exercise(user, "Breath Awareness", "Intermediate", "Body", 7,
+                "1. Focus on natural breath\n" +
+                "2. Notice breath quality\n" +
+                "3. Observe breath rhythm\n" +
+                "4. Don't change the breath\n" +
+                "5. Practice for 7 minutes"),
             
-            // 15. Vocal Projection
-            new BodyExercise(
-                "Vocal Projection",
-                "vocal",
-                "advanced",
-                "Advanced vocal projection exercises",
-                "1. Stand in a large room\n2. Take a deep breath\n3. Say 'Hello' loudly and clearly\n4. Project your voice to the far wall\n5. Practice different pitches and volumes\n6. Add movement (walking, turning)\n7. Practice for 3 minutes\n8. Rest for 1 minute\n9. Repeat 2 more times",
-                240,
-                3,
-                "Vocal cords, Diaphragm, Abdominal muscles",
-                "Improves vocal projection, enhances public speaking, increases vocal power"
-            )
+            new Exercise(user, "Breath Visualization", "Intermediate", "Body", 6,
+                "1. Imagine breath as light\n" +
+                "2. Light enters with inhale\n" +
+                "3. Fills your entire body\n" +
+                "4. Exits with exhale\n" +
+                "5. Practice for 6 minutes"),
+            
+            new Exercise(user, "Breath with Movement", "Intermediate", "Body", 8,
+                "1. Inhale while raising arms\n" +
+                "2. Hold while arms are up\n" +
+                "3. Exhale while lowering arms\n" +
+                "4. Coordinate breath with movement\n" +
+                "5. Practice for 8 minutes"),
+            
+            new Exercise(user, "Breath Pacing", "Intermediate", "Body", 7,
+                "1. Set a timer for 5 seconds\n" +
+                "2. Inhale for 5 seconds\n" +
+                "3. Exhale for 5 seconds\n" +
+                "4. Gradually increase to 6-7 seconds\n" +
+                "5. Practice for 7 minutes"),
+            
+            new Exercise(user, "Breath Quality Focus", "Intermediate", "Body", 6,
+                "1. Focus on smooth inhale\n" +
+                "2. Notice any hitches or pauses\n" +
+                "3. Smooth out the breath\n" +
+                "4. Practice for 6 minutes"),
+            
+            new Exercise(user, "Breath Rhythm Variation", "Intermediate", "Body", 8,
+                "1. Inhale for 4, hold for 2, exhale for 6\n" +
+                "2. Inhale for 6, hold for 3, exhale for 8\n" +
+                "3. Alternate between patterns\n" +
+                "4. Practice for 8 minutes"),
+            
+            new Exercise(user, "Breath Depth Control", "Intermediate", "Body", 7,
+                "1. Take shallow breaths\n" +
+                "2. Gradually deepen each breath\n" +
+                "3. Notice the difference\n" +
+                "4. Practice for 7 minutes"),
+
+            // ===============================
+            // BODY EXERCISES - ADVANCED (Master Breathing)
+            // ===============================
+            new Exercise(user, "Advanced Breath Retention", "Advanced", "Body", 10,
+                "1. Inhale for 4 counts\n" +
+                "2. Hold for 16 counts\n" +
+                "3. Exhale for 8 counts\n" +
+                "4. Hold empty for 8 counts\n" +
+                "5. Practice for 10 minutes"),
+            
+            new Exercise(user, "Breath Ratio Practice", "Advanced", "Body", 12,
+                "1. Practice 1:4:2:1 ratio\n" +
+                "2. Inhale:Hold:Exhale:Hold\n" +
+                "3. Gradually increase hold times\n" +
+                "4. Practice for 12 minutes"),
+            
+            new Exercise(user, "Breath Bandha Practice", "Advanced", "Body", 15,
+                "1. Engage mula bandha (pelvic floor)\n" +
+                "2. Inhale and hold breath\n" +
+                "3. Maintain bandha during retention\n" +
+                "4. Release with exhale\n" +
+                "5. Practice for 15 minutes"),
+            
+            new Exercise(user, "Breath Meditation", "Advanced", "Body", 20,
+                "1. Sit in meditation posture\n" +
+                "2. Focus solely on breath\n" +
+                "3. Count breaths to 100\n" +
+                "4. If mind wanders, start over\n" +
+                "5. Practice for 20 minutes"),
+            
+            new Exercise(user, "Breath Pranayama", "Advanced", "Body", 15,
+                "1. Practice kapalabhati (skull shining)\n" +
+                "2. Rapid exhales through nose\n" +
+                "3. Passive inhales\n" +
+                "4. Start with 30 rounds\n" +
+                "5. Practice for 15 minutes"),
+            
+            new Exercise(user, "Breath Energy Flow", "Advanced", "Body", 18,
+                "1. Imagine energy flowing with breath\n" +
+                "2. Energy enters through crown\n" +
+                "3. Flows down spine with inhale\n" +
+                "4. Flows up with exhale\n" +
+                "5. Practice for 18 minutes"),
+            
+            new Exercise(user, "Breath Sound Practice", "Advanced", "Body", 12,
+                "1. Practice ujjayi breath\n" +
+                "2. Create ocean sound in throat\n" +
+                "3. Maintain throughout practice\n" +
+                "4. Practice for 12 minutes"),
+            
+            new Exercise(user, "Breath Visualization Advanced", "Advanced", "Body", 15,
+                "1. Visualize breath as energy\n" +
+                "2. Energy fills specific body parts\n" +
+                "3. Move energy with breath\n" +
+                "4. Practice for 15 minutes"),
+            
+            new Exercise(user, "Breath Control Mastery", "Advanced", "Body", 20,
+                "1. Control breath in any situation\n" +
+                "2. Practice under stress\n" +
+                "3. Maintain calm breathing\n" +
+                "4. Practice for 20 minutes"),
+            
+            new Exercise(user, "Breath Integration", "Advanced", "Body", 25,
+                "1. Integrate breath with daily activities\n" +
+                "2. Walking, talking, working\n" +
+                "3. Maintain awareness\n" +
+                "4. Practice throughout the day"),
+            
+            new Exercise(user, "Breath Mastery", "Advanced", "Body", 30,
+                "1. Combine all breathing techniques\n" +
+                "2. Create personal practice\n" +
+                "3. Master breath control\n" +
+                "4. Practice for 30 minutes"),
+            
+            new Exercise(user, "Breath Enlightenment", "Advanced", "Body", 45,
+                "1. Advanced meditation with breath\n" +
+                "2. Deep spiritual practice\n" +
+                "3. Breath as gateway to consciousness\n" +
+                "4. Practice for 45 minutes"),
+
+            // ===============================
+            // SPEECH EXERCISES - BEGINNER
+            // ===============================
+            new Exercise(user, "Single Word Practice", "Beginner", "Speech", 5,
+                "1. Choose simple words: 'cat', 'dog', 'sun', 'moon'\n" +
+                "2. Say each word clearly and slowly\n" +
+                "3. Focus on clear pronunciation\n" +
+                "4. Repeat each word 5 times\n" +
+                "5. Practice for 5 minutes"),
+            
+            new Exercise(user, "Basic Statements", "Beginner", "Speech", 6,
+                "1. Practice: 'I am happy today'\n" +
+                "2. Say it slowly and clearly\n" +
+                "3. Focus on each word\n" +
+                "4. Repeat 10 times\n" +
+                "5. Practice for 6 minutes"),
+            
+            new Exercise(user, "Simple Sentences", "Beginner", "Speech", 7,
+                "1. Practice: 'The sun is bright'\n" +
+                "2. Say it with proper pauses\n" +
+                "3. Focus on clarity\n" +
+                "4. Repeat 8 times\n" +
+                "5. Practice for 7 minutes"),
+            
+            new Exercise(user, "Easy Tongue Twisters", "Beginner", "Speech", 5,
+                "1. 'Peter Piper picked a peck of pickled peppers'\n" +
+                "2. Start slowly and clearly\n" +
+                "3. Gradually increase speed\n" +
+                "4. Focus on accuracy over speed\n" +
+                "5. Practice for 5 minutes"),
+            
+            new Exercise(user, "Vowel Sounds", "Beginner", "Speech", 4,
+                "1. Practice: A, E, I, O, U\n" +
+                "2. Hold each sound for 3 seconds\n" +
+                "3. Focus on clear pronunciation\n" +
+                "4. Repeat each vowel 5 times\n" +
+                "5. Practice for 4 minutes"),
+
+            // ===============================
+            // SPEECH EXERCISES - INTERMEDIATE
+            // ===============================
+            new Exercise(user, "Complex Word Practice", "Intermediate", "Speech", 6,
+                "1. Practice: 'beautiful', 'wonderful', 'excellent'\n" +
+                "2. Break down syllables\n" +
+                "3. Focus on stress patterns\n" +
+                "4. Repeat each word 8 times\n" +
+                "5. Practice for 6 minutes"),
+            
+            new Exercise(user, "Detailed Statements", "Intermediate", "Speech", 7,
+                "1. Practice: 'I am excited to learn new things'\n" +
+                "2. Focus on smooth transitions\n" +
+                "3. Add natural pauses\n" +
+                "4. Repeat 10 times\n" +
+                "5. Practice for 7 minutes"),
+            
+            new Exercise(user, "Complex Sentences", "Intermediate", "Speech", 8,
+                "1. Practice: 'The beautiful sunset painted the sky with vibrant colors'\n" +
+                "2. Focus on rhythm and flow\n" +
+                "3. Add appropriate emphasis\n" +
+                "4. Repeat 6 times\n" +
+                "5. Practice for 8 minutes"),
+            
+            new Exercise(user, "Intermediate Tongue Twisters", "Intermediate", "Speech", 6,
+                "1. 'She sells seashells by the seashore'\n" +
+                "2. Practice with clear articulation\n" +
+                "3. Focus on speed and accuracy\n" +
+                "4. Repeat 12 times\n" +
+                "5. Practice for 6 minutes"),
+            
+            new Exercise(user, "Consonant Clusters", "Intermediate", "Speech", 7,
+                "1. Practice: 'str', 'spl', 'thr', 'spr'\n" +
+                "2. Add vowels to make words\n" +
+                "3. Focus on clear consonant sounds\n" +
+                "4. Practice for 7 minutes"),
+
+            // ===============================
+            // SPEECH EXERCISES - ADVANCED
+            // ===============================
+            new Exercise(user, "Advanced Vocabulary", "Advanced", "Speech", 8,
+                "1. Practice: 'extraordinary', 'phenomenal', 'magnificent'\n" +
+                "2. Focus on syllable stress\n" +
+                "3. Practice in context\n" +
+                "4. Repeat each word 10 times\n" +
+                "5. Practice for 8 minutes"),
+            
+            new Exercise(user, "Complex Statements", "Advanced", "Speech", 9,
+                "1. Practice: 'I am absolutely thrilled to be participating in this remarkable opportunity'\n" +
+                "2. Focus on natural flow\n" +
+                "3. Add emotional expression\n" +
+                "4. Repeat 8 times\n" +
+                "5. Practice for 9 minutes"),
+            
+            new Exercise(user, "Advanced Sentences", "Advanced", "Speech", 10,
+                "1. Practice: 'The magnificent waterfall cascaded down the ancient granite cliffs'\n" +
+                "2. Focus on dramatic delivery\n" +
+                "3. Add appropriate pauses and emphasis\n" +
+                "4. Repeat 6 times\n" +
+                "5. Practice for 10 minutes"),
+            
+            new Exercise(user, "Advanced Tongue Twisters", "Advanced", "Speech", 8,
+                "1. 'How much wood would a woodchuck chuck if a woodchuck could chuck wood?'\n" +
+                "2. Practice with perfect articulation\n" +
+                "3. Focus on speed and clarity\n" +
+                "4. Repeat 15 times\n" +
+                "5. Practice for 8 minutes"),
+            
+            new Exercise(user, "Emotional Expression", "Advanced", "Speech", 9,
+                "1. Practice the same sentence with different emotions\n" +
+                "2. Happy, sad, angry, excited, calm\n" +
+                "3. Focus on voice modulation\n" +
+                "4. Practice for 9 minutes")
         );
-        
-        bodyExerciseRepository.saveAll(exercises);
-        System.out.println("✅ Seeded " + exercises.size() + " body exercises for speech therapy");
+
+        // Set additional properties for each exercise
+        exercises.forEach(exercise -> {
+            exercise.setExerciseType(exercise.getType().equals("Body") ? "body_exercise" : "speech_exercise");
+            exercise.setTargetText(exercise.getName());
+            exercise.setDifficultyLevel(exercise.getCategory());
+            exercise.setSessionDuration(exercise.getDuration() * 60); // Convert minutes to seconds
+            exercise.setCompleted(false);
+            exercise.setProgressPercentage(0);
+            exercise.setAttemptsCount(0);
+            exercise.setBestScore(0);
+        });
+
+        exerciseRepository.saveAll(exercises);
+        System.out.println("✅ Seeded " + exercises.size() + " comprehensive exercises (including 30+ breathing exercises)");
+    }
+
+    private void seedAIExercises(User user) {
+        // Create AI-specific exercises for advanced speech practice
+        List<AIExercise> aiExercises = Arrays.asList(
+            new AIExercise(user, "Practice difficult words with AI feedback", "pronunciation"),
+            new AIExercise(user, "Build speaking confidence with AI guidance", "fluency"),
+            new AIExercise(user, "Learn emotional expression in speech", "expression"),
+            new AIExercise(user, "Improve speech clarity with AI analysis", "clarity"),
+            new AIExercise(user, "Build speaking confidence through AI practice", "confidence")
+        );
+
+        // Set additional properties for each AI exercise
+        aiExercises.forEach(exercise -> {
+            exercise.setDifficultyLevel("Advanced");
+            exercise.setTargetPhonemes("th, sh, ch");
+            exercise.setTargetSkills("clarity, fluency, expression");
+            exercise.setContext("AI-powered practice");
+            exercise.setAiReasoning("Personalized exercise based on user needs");
+        });
+
+        aiExerciseRepository.saveAll(aiExercises);
+        System.out.println("✅ Seeded " + aiExercises.size() + " AI exercises");
     }
 }
