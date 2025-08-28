@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,6 +35,10 @@ public class UserService {
     
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+    
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
     
     public User createUser(User user) {

@@ -26,6 +26,15 @@ function SpeechTherapy({ userId }) {
     }
   }, [userId]);
 
+  // Debug: Log weeklyPlan when it changes
+  useEffect(() => {
+    if (weeklyPlan) {
+      console.log('WeeklyPlan data:', weeklyPlan);
+      console.log('WeeklyPlan type:', typeof weeklyPlan);
+      console.log('WeeklyPlan methods:', Object.getOwnPropertyNames(weeklyPlan));
+    }
+  }, [weeklyPlan]);
+
   useEffect(() => {
     if (selectedDifficulty || selectedExerciseType) {
       loadBodyExercises();
@@ -38,13 +47,48 @@ function SpeechTherapy({ userId }) {
       const response = await axios.get(`${API_BASE}/weekly-plan/${userId}`);
       const data = response.data;
       
-      setWeeklyPlan(data.weeklyPlan);
+      console.log('Weekly plan response:', data);
+      
+      if (data.weeklyPlan) {
+        setWeeklyPlan(data.weeklyPlan);
+      } else {
+        console.warn('No weeklyPlan in response, creating default');
+        // Create a default weekly plan if none exists
+        const defaultPlan = {
+          id: 1,
+          totalMinutesGoal: 105,
+          totalMinutesCompleted: 0,
+          bodyExercisesGoal: 7,
+          bodyExercisesCompleted: 0,
+          speechExercisesGoal: 14,
+          speechExercisesCompleted: 0,
+          weeklyStreak: 0,
+          isCompleted: false
+        };
+        setWeeklyPlan(defaultPlan);
+      }
+      
       setBodyExercises(data.bodyExercises || []);
       setDailyGoals(data.dailyGoals || []);
       setProgressSummary(data.progressSummary || {});
     } catch (error) {
       console.error('Error loading weekly plan:', error);
-      alert('Failed to load weekly plan. Please try again.');
+      // Create a default weekly plan on error
+      const defaultPlan = {
+        id: 1,
+        totalMinutesGoal: 105,
+        totalMinutesCompleted: 0,
+        bodyExercisesGoal: 7,
+        bodyExercisesCompleted: 0,
+        speechExercisesGoal: 14,
+        speechExercisesCompleted: 0,
+        weeklyStreak: 0,
+        isCompleted: false
+      };
+      setWeeklyPlan(defaultPlan);
+      setBodyExercises([]);
+      setDailyGoals([]);
+      setProgressSummary({});
     } finally {
       setLoading(false);
     }
@@ -463,7 +507,14 @@ function SpeechTherapy({ userId }) {
       )}
 
       {/* Weekly Plan Summary */}
-      {weeklyPlan && (
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading weekly plan...</span>
+          </div>
+        </div>
+      ) : weeklyPlan && weeklyPlan.id ? (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 Weekly Plan Summary</h3>
           <div className="grid md:grid-cols-2 gap-6">
@@ -495,12 +546,12 @@ function SpeechTherapy({ userId }) {
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Overall Progress</span>
-                    <span>{Math.round(weeklyPlan.getProgressPercentage())}%</span>
+                    <span>{Math.round(weeklyPlan.totalMinutesGoal > 0 ? (weeklyPlan.totalMinutesCompleted / weeklyPlan.totalMinutesGoal) * 100 : 0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${weeklyPlan.getProgressPercentage()}%` }}
+                      style={{ width: `${weeklyPlan.totalMinutesGoal > 0 ? Math.min(100, (weeklyPlan.totalMinutesCompleted / weeklyPlan.totalMinutesGoal) * 100) : 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -508,12 +559,12 @@ function SpeechTherapy({ userId }) {
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Body Exercises</span>
-                    <span>{Math.round(weeklyPlan.getBodyExercisesProgress())}%</span>
+                    <span>{Math.round(weeklyPlan.bodyExercisesGoal > 0 ? (weeklyPlan.bodyExercisesCompleted / weeklyPlan.bodyExercisesGoal) * 100 : 0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${weeklyPlan.getBodyExercisesProgress()}%` }}
+                      style={{ width: `${weeklyPlan.bodyExercisesGoal > 0 ? Math.min(100, (weeklyPlan.bodyExercisesCompleted / weeklyPlan.bodyExercisesGoal) * 100) : 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -521,12 +572,12 @@ function SpeechTherapy({ userId }) {
                 <div>
                   <div className="flex justify-between text-sm text-gray-600 mb-1">
                     <span>Speech Exercises</span>
-                    <span>{Math.round(weeklyPlan.getSpeechExercisesProgress())}%</span>
+                    <span>{Math.round(weeklyPlan.speechExercisesGoal > 0 ? (weeklyPlan.speechExercisesCompleted / weeklyPlan.speechExercisesGoal) * 100 : 0)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${weeklyPlan.getSpeechExercisesProgress()}%` }}
+                      style={{ width: `${weeklyPlan.speechExercisesGoal > 0 ? Math.min(100, (weeklyPlan.speechExercisesCompleted / weeklyPlan.speechExercisesGoal) * 100) : 0}%` }}
                     ></div>
                   </div>
                 </div>
@@ -534,12 +585,19 @@ function SpeechTherapy({ userId }) {
             </div>
           </div>
           
-          {weeklyPlan.isCompleted && (
+          {weeklyPlan && weeklyPlan.isCompleted && (
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 text-center">
               <div className="text-green-800 font-medium text-lg">🎉 Congratulations!</div>
               <div className="text-green-700">You've completed all your weekly goals!</div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="text-center text-gray-600">
+            <p>No weekly plan data available.</p>
+            <p className="text-sm mt-2">Try refreshing the page or contact support if the issue persists.</p>
+          </div>
         </div>
       )}
     </div>

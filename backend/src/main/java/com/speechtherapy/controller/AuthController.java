@@ -8,11 +8,37 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
 public class AuthController {
+    
+    @GetMapping("/test")
+    public ResponseEntity<Map<String, Object>> test() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Auth controller is working!");
+        response.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/users")
+    public ResponseEntity<Map<String, Object>> listUsers() {
+        try {
+            // This is for debugging - in production, you'd want proper authentication
+            List<User> users = userService.getAllUsers();
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Users retrieved successfully");
+            response.put("count", users.size());
+            response.put("users", users);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("message", "Failed to retrieve users: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(error);
+        }
+    }
     
     @Autowired
     private UserService userService;
@@ -23,26 +49,39 @@ public class AuthController {
             String email = loginRequest.get("email");
             String password = loginRequest.get("password");
             
+            System.out.println("Login attempt - Email: " + email + ", Password: " + (password != null ? "***" : "null"));
+            
             if (email == null || password == null) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("message", "Email and password are required");
                 return ResponseEntity.badRequest().body(error);
             }
             
-            // For demo purposes, create a default user if none exists
-            User user = userService.getOrCreateDefaultUser();
+            // First, try to find the user by email
+            User user = userService.getUserByEmail(email);
+            System.out.println("User lookup result: " + (user != null ? "Found user ID: " + user.getId() : "User not found"));
             
-            // Simple password check (in production, use proper password hashing)
-            if ("password123".equals(password) || user.getEmail().equals(email)) {
+            if (user == null) {
+                // For demo purposes, if user doesn't exist, create a default user
+                // In production, you would return an error
+                System.out.println("Creating default user for email: " + email);
+                user = userService.createDefaultUser();
+            }
+            
+            // For demo purposes, accept any non-empty password
+            // In production, you would hash and compare passwords properly
+            if (password != null && !password.trim().isEmpty()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "Login successful");
                 response.put("token", "demo-token-" + System.currentTimeMillis());
                 response.put("user", user);
+                System.out.println("Login successful for user: " + user.getName() + " (ID: " + user.getId() + ")");
                 return ResponseEntity.ok(response);
             } else {
                 Map<String, Object> error = new HashMap<>();
-                error.put("message", "Invalid email or password");
-                return ResponseEntity.status(401).body(error);
+                error.put("message", "Password is required");
+                System.out.println("Login failed: Password is empty");
+                return ResponseEntity.status(400).body(error);
             }
             
         } catch (Exception e) {
@@ -59,6 +98,8 @@ public class AuthController {
             String email = signupRequest.get("email");
             String password = signupRequest.get("password");
             
+            System.out.println("Signup attempt - Name: " + name + ", Email: " + email + ", Password: " + (password != null ? "***" : "null"));
+            
             if (name == null || email == null || password == null) {
                 Map<String, Object> error = new HashMap<>();
                 error.put("message", "Name, email, and password are required");
@@ -68,6 +109,7 @@ public class AuthController {
             // Check if user already exists
             User existingUser = userService.getUserByEmail(email);
             if (existingUser != null) {
+                System.out.println("Signup failed: User already exists with email: " + email);
                 Map<String, Object> error = new HashMap<>();
                 error.put("message", "User with this email already exists");
                 return ResponseEntity.status(409).body(error);
@@ -82,6 +124,7 @@ public class AuthController {
             newUser.setWeeklyGoal(105);
             
             User savedUser = userService.createUser(newUser);
+            System.out.println("User created successfully - ID: " + savedUser.getId() + ", Name: " + savedUser.getName() + ", Email: " + savedUser.getEmail());
             
             Map<String, Object> response = new HashMap<>();
             response.put("message", "User created successfully");

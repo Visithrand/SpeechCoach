@@ -14,7 +14,7 @@ function Dashboard({ userProgress, setCurrentPage }) {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Your Speech Journey! 🎯</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Welcome to Your Speech Journey!</h2>
         <p className="text-lg text-gray-600">Let's practice and improve together</p>
       </div>
 

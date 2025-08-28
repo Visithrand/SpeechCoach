@@ -64,7 +64,7 @@ function Exercises({ isRecording, audioUrl, startRecording, stopRecording, submi
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Speech Exercises 🎯</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Speech Exercises</h2>
         <p className="text-gray-600">Choose an exercise type and start practicing!</p>
       </div>
 

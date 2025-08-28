@@ -92,6 +92,65 @@ class DataManager:
             st.error(f"Failed to save progress: {str(e)}")
             return False
     
+    def auto_save_user_data(self, user_data: Dict) -> bool:
+        """
+        Automatically save user data to prevent loss of progress
+        
+        Args:
+            user_data: Complete user data dictionary
+            
+        Returns:
+            bool: True if saved successfully
+        """
+        try:
+            # Save to multiple files for redundancy
+            timestamp = datetime.now().isoformat()
+            
+            # Main progress file
+            progress_data = {
+                'total_points': user_data.get('total_points', 0),
+                'streak_days': user_data.get('streak_days', 0),
+                'exercises_completed': user_data.get('exercises_completed', 0),
+                'last_session': user_data.get('last_session'),
+                'daily_goal': user_data.get('daily_goal', 15),
+                'weekly_goal': user_data.get('weekly_goal', 105),
+                'last_updated': timestamp
+            }
+            
+            # Session history file
+            session_data = {
+                'sessions': user_data.get('session_history', []),
+                'last_updated': timestamp
+            }
+            
+            # Save both files
+            self.save_progress_data(progress_data)
+            self.save_session_history(session_data)
+            
+            return True
+            
+        except Exception as e:
+            st.warning(f"Auto-save failed: {str(e)}")
+            return False
+    
+    def save_session_history(self, session_data: Dict) -> bool:
+        """
+        Save session history data
+        
+        Args:
+            session_data: Dictionary containing session information
+            
+        Returns:
+            bool: True if saved successfully
+        """
+        try:
+            with open(self.session_history_file, 'w') as f:
+                json.dump(session_data, f, indent=2)
+            return True
+        except Exception as e:
+            st.error(f"Failed to save session history: {str(e)}")
+            return False
+    
     def load_progress_data(self) -> Dict:
         """
         Load user progress data

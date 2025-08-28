@@ -1,189 +1,319 @@
-# Speech Therapy Assistant - Frontend
+# Speech Therapy Frontend - React Application
 
-A modern, modular React application for AI-powered speech therapy exercises.
-
-## 🏗️ Project Structure
-
-```
-src/
-├── components/           # Reusable UI components
-│   ├── Navbar.js        # Navigation component
-│   ├── Dashboard.js     # Main dashboard view
-│   ├── Exercises.js     # Exercise selection and practice
-│   ├── AudioRecorder.js # Audio recording interface
-│   ├── AnalysisResults.js # Speech analysis feedback
-│   ├── Progress.js      # Progress tracking
-│   └── Settings.js      # User preferences
-├── data/                # Exercise data and content
-│   └── exercises.js     # 40 exercises (10 per category)
-├── App.js               # Main application component
-├── index.js             # Application entry point
-└── index.css            # Global styles with Tailwind CSS
-```
-
-## 🎯 Exercise Categories
-
-### 1. Word Exercises (10 exercises)
-- **Beginner**: Basic consonants, vowel sounds
-- **Intermediate**: TH, R, S/Z, L sounds
-- **Advanced**: Complex consonants, silent letters, stress patterns, minimal pairs
-
-### 2. Sentence Repetition (10 exercises)
-- **Beginner**: Simple statements, question forms
-- **Intermediate**: Past tense, future plans, conditionals
-- **Advanced**: Complex sentences, passive voice, reported speech, emphatic structures, academic language
-
-### 3. Conversation Practice (10 exercises)
-- **Beginner**: Restaurant, doctor's office
-- **Intermediate**: Job interview, travel planning, problem solving, cultural exchange
-- **Advanced**: Academic discussion, business negotiation, environmental discussion, technology debate
-
-### 4. Tongue Twisters (10 exercises)
-- **Beginner**: Peter Piper, She Sells Seashells
-- **Intermediate**: How Much Wood, Betty Botter, Fuzzy Wuzzy, Six Slick Snakes
-- **Advanced**: Sixth Sick Sheik, Irish Wristwatch, Unique New York, Red Leather Yellow Leather
+A modern, professional speech therapy application built with React that provides AI-powered speech analysis, personalized exercises, and comprehensive progress tracking.
 
 ## 🚀 Features
 
-- **Modular Architecture**: Clean separation of concerns with reusable components
-- **Real Exercise Content**: 40 carefully crafted exercises instead of mock data
-- **Progress Tracking**: Exercise completion tracking with visual indicators
-- **Audio Recording**: Built-in microphone recording for speech practice
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Difficulty Levels**: Beginner, intermediate, and advanced exercises
-- **Visual Feedback**: Color-coded difficulty indicators and completion status
+### Core Functionality
+- **Real-time Speech Analysis**: AI-powered pronunciation, fluency, and intonation feedback
+- **Personalized Exercises**: Dynamic exercise generation based on user performance
+- **Progress Tracking**: Comprehensive analytics and progress visualization
+- **Gamification**: Achievement system, streaks, and motivational features
+- **Multi-modal Feedback**: Text and audio feedback for speech improvement
 
-## 🛠️ Technology Stack
+### User Experience
+- **Modern UI/UX**: Clean, ChatGPT-style interface with smooth animations
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Accessibility**: High contrast ratios and keyboard navigation support
+- **Real-time Updates**: Live data synchronization with backend
 
-- **React 18** - Modern React with hooks
-- **Tailwind CSS** - Utility-first CSS framework
-- **JavaScript ES6+** - Modern JavaScript features
-- **Web Audio API** - Browser-based audio recording
-- **Responsive Design** - Mobile and desktop optimized
+## 🏗️ Architecture
 
-## 📱 Component Details
+### Frontend Stack
+- **React 18**: Modern React with hooks and functional components
+- **React Router**: Client-side routing and navigation
+- **Tailwind CSS**: Utility-first CSS framework for styling
+- **Lucide React**: Beautiful, customizable icons
+- **Recharts**: Professional charting library for analytics
+- **Axios**: HTTP client for API communication
 
-### Navbar.js
-- Navigation between different app sections
-- User progress display (points, streak)
-- Responsive navigation menu
+### State Management
+- **React Hooks**: useState, useEffect for local state management
+- **Context API**: Global state for authentication and user data
+- **Local Storage**: Persistent user preferences and session data
 
-### Dashboard.js
-- Welcome message and quick actions
-- Progress overview cards
-- Recent achievements
-- Motivational content
+## 📱 Pages & Components
 
-### Exercises.js
-- Exercise type selection (words, sentences, conversations, tongue twisters)
-- Exercise list with difficulty indicators
-- Exercise content display
-- Integration with audio recorder
+### Core Pages
+1. **Dashboard** (`/dashboard`) - Overview, stats, and quick actions
+2. **Profile** (`/profile`) - User information, achievements, and progress
+3. **Analytics** (`/analytics`) - Detailed performance charts and insights
+4. **Feedback** (`/feedback`) - Session analysis and AI recommendations
+5. **Exercises** (`/exercises`) - Exercise categories and practice sessions
+6. **Speech Exercises** (`/speech-exercises`) - AI-powered speech practice
+7. **Settings** (`/settings`) - User preferences and customization
 
-### AudioRecorder.js
-- Start/stop recording controls
-- Audio playback
-- Recording status indicators
-- User guidance and tips
+### Reusable Components
+- **Navbar**: Responsive navigation with user menu
+- **Loading States**: Consistent loading indicators
+- **Error Boundaries**: Graceful error handling
+- **Charts**: Reusable chart components for analytics
+- **Forms**: Standardized form inputs and validation
 
-### AnalysisResults.js
-- Score display (overall, accuracy, clarity)
-- Progress visualization
-- Feedback and tips
-- Achievement badges
-- Next steps guidance
+## 🔌 Backend API Integration
 
-### Progress.js
-- Progress overview statistics
-- Weekly progress charts
-- Achievement badges
-- Exercise type breakdown
+### Authentication Endpoints
+```
+POST /api/auth/login          - User login
+POST /api/auth/signup        - User registration
+POST /api/auth/logout        - User logout
+GET  /api/auth/verify        - Token verification
+```
 
-### Settings.js
-- Audio preferences
-- Feedback detail levels
-- Practice goals
-- Notification settings
-- Privacy options
+### User Management
+```
+GET  /api/users/{userId}                    - Get user profile
+PUT  /api/users/{userId}                    - Update user profile
+GET  /api/users/{userId}/achievements       - Get user achievements
+GET  /api/users/{userId}/recent-activity    - Get recent activity
+```
 
-## 🎨 Styling
+### Dashboard & Analytics
+```
+GET  /api/dashboard/{userId}                - Get dashboard data
+GET  /api/analytics/{userId}                - Get analytics data
+GET  /api/streak/{userId}                   - Get streak information
+GET  /api/feedback/{userId}                 - Get feedback data
+```
 
-- **Tailwind CSS** for consistent, responsive design
-- **Color-coded difficulty levels**: Green (beginner), Yellow (intermediate), Red (advanced)
-- **Completion indicators**: Green checkmarks for completed exercises
-- **Progress bars**: Visual representation of goals and achievements
-- **Responsive grid layouts**: Adapts to different screen sizes
+### Exercises & Practice
+```
+GET  /api/exercises/{category}/{level}/{userId}  - Get exercises
+POST /api/exercises/submit                    - Submit exercise result
+GET  /api/exercises/recommendations/{userId}  - Get AI recommendations
+```
 
-## 🔧 Getting Started
+### Speech Analysis
+```
+POST /api/speech/analyze                     - Analyze speech recording
+GET  /api/speech/feedback/{sessionId}        - Get session feedback
+POST /api/speech/record                      - Record speech session
+```
 
-1. **Install dependencies**:
-   ```bash
+## 🎨 Design System
+
+### Color Palette
+- **Primary**: `#3B82F6` (Blue)
+- **Success**: `#10B981` (Green)
+- **Warning**: `#FBBF24` (Yellow)
+- **Error**: `#EF4444` (Red)
+- **Background**: `#F8F9FA` (Light Gray)
+- **Surface**: `#FFFFFF` (White)
+
+### Typography
+- **Font Family**: Inter (with system fallbacks)
+- **Font Weights**: 400 (normal), 500 (medium), 600 (semibold), 700 (bold)
+- **Line Height**: 1.6 for optimal readability
+
+### Spacing & Layout
+- **Border Radius**: 8px-12px for cards and components
+- **Shadows**: Subtle shadows with hover effects
+- **Grid System**: Responsive grid layouts using Tailwind CSS
+- **Padding**: Consistent 1rem-2rem spacing
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 16+ and npm
+- Backend API running (Spring Boot)
+- Modern web browser
+
+### Installation
+```bash
+# Clone the repository
+git clone <repository-url>
+cd SpeechCoach/frontend
+
+# Install dependencies
    npm install
-   ```
 
-2. **Start development server**:
-   ```bash
+# Set environment variables
+cp .env.example .env.local
+# Edit .env.local with your backend API URL
+
+# Start development server
    npm start
    ```
 
-3. **Build for production**:
+### Environment Variables
+```bash
+REACT_APP_API_BASE_URL=http://localhost:8080/api
+REACT_APP_WS_URL=ws://localhost:8080/ws
+REACT_APP_ENVIRONMENT=development
+```
+
+### Build for Production
    ```bash
    npm run build
    ```
 
-## 📊 Data Structure
+## 🔧 Development
 
-Each exercise follows this structure:
-```javascript
-{
-  id: 1,
-  title: "Exercise Title",
-  difficulty: "beginner|intermediate|advanced",
-  description: "Exercise description",
-  // Category-specific content:
-  words: ["word1", "word2"],           // For word exercises
-  sentences: ["sentence1", "sentence2"], // For sentence exercises
-  dialogue: ["line1", "line2"],        // For conversation exercises
-  text: "tongue twister text",         // For tongue twisters
-  targetSounds: ["sound1", "sound2"]   // For word exercises
-}
+### Project Structure
+```
+src/
+├── components/          # Reusable UI components
+├── pages/              # Page components
+├── hooks/              # Custom React hooks
+├── utils/              # Utility functions
+├── services/           # API service functions
+├── styles/             # CSS and styling
+└── App.js             # Main application component
 ```
 
-## 🎯 Exercise Flow
+### Code Style
+- **ESLint**: Code linting and formatting
+- **Prettier**: Code formatting
+- **Functional Components**: Use hooks instead of class components
+- **TypeScript**: Consider migrating to TypeScript for better type safety
 
-1. **Select Exercise Type**: Choose from 4 categories
-2. **Browse Exercises**: View 10 exercises per category with difficulty levels
-3. **Select Exercise**: Click on specific exercise to practice
-4. **Record Speech**: Use microphone to record pronunciation
-5. **Analyze**: Submit audio for analysis (connects to backend)
-6. **Review Results**: Get detailed feedback and scores
-7. **Track Progress**: Mark exercises as completed
+### Testing
+```bash
+# Run tests
+npm test
 
-## 🔮 Future Enhancements
+# Run tests with coverage
+npm run test:coverage
 
-- **Backend Integration**: Connect to Spring Boot API for real speech analysis
-- **User Authentication**: User accounts and progress persistence
-- **Advanced Analytics**: Detailed progress reports and insights
-- **Social Features**: Share achievements and compete with friends
-- **Offline Support**: PWA capabilities for offline practice
-- **Voice Recognition**: Real-time pronunciation feedback
+# Run tests in watch mode
+npm run test:watch
+```
 
-## 📝 Development Notes
+## 📊 Data Flow
 
-- **Component Reusability**: All components are designed to be reusable
-- **State Management**: Uses React hooks for local state management
-- **Props Interface**: Clear prop interfaces for component communication
-- **Error Handling**: Graceful fallbacks for audio recording issues
-- **Accessibility**: Semantic HTML and ARIA labels for screen readers
+### API Communication
+1. **Component Mount**: useEffect triggers API calls
+2. **Loading State**: Show loading indicators while fetching
+3. **Data Processing**: Transform API response for UI consumption
+4. **State Update**: Update component state with processed data
+5. **Error Handling**: Graceful error handling with retry options
+
+### State Management
+- **Local State**: Component-specific data using useState
+- **Global State**: User authentication and preferences
+- **Persistent State**: User settings and session data in localStorage
+
+## 🔒 Security
+
+### Authentication
+- **JWT Tokens**: Secure token-based authentication
+- **Token Storage**: Secure token storage in localStorage
+- **Route Protection**: Protected routes for authenticated users
+- **Token Refresh**: Automatic token refresh before expiration
+
+### Data Validation
+- **Input Sanitization**: Sanitize user inputs
+- **API Validation**: Validate API responses
+- **Error Boundaries**: Catch and handle runtime errors
+
+## 📱 Responsive Design
+
+### Breakpoints
+- **Mobile**: < 768px
+- **Tablet**: 768px - 1024px
+- **Desktop**: > 1024px
+
+### Mobile-First Approach
+- Start with mobile layout
+- Progressive enhancement for larger screens
+- Touch-friendly interactions
+- Optimized for mobile performance
+
+## 🚀 Performance
+
+### Optimization Techniques
+- **Code Splitting**: Lazy loading of routes and components
+- **Memoization**: React.memo and useMemo for expensive operations
+- **Bundle Analysis**: Regular bundle size monitoring
+- **Image Optimization**: Optimized images and lazy loading
+
+### Loading Strategies
+- **Skeleton Loading**: Placeholder content while loading
+- **Progressive Loading**: Load critical content first
+- **Caching**: Cache frequently accessed data
+- **Prefetching**: Preload anticipated user actions
+
+## 🧪 Testing Strategy
+
+### Testing Levels
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: Component interaction testing
+- **E2E Tests**: Full user journey testing
+- **Accessibility Tests**: Screen reader and keyboard navigation
+
+### Testing Tools
+- **Jest**: Testing framework
+- **React Testing Library**: Component testing utilities
+- **Cypress**: End-to-end testing
+- **MSW**: API mocking for tests
+
+## 📈 Monitoring & Analytics
+
+### Performance Monitoring
+- **Core Web Vitals**: Monitor LCP, FID, CLS
+- **Error Tracking**: Capture and report runtime errors
+- **User Analytics**: Track user behavior and engagement
+- **Performance Metrics**: Monitor app performance over time
+
+## 🔄 Deployment
+
+### Build Process
+1. **Code Quality**: Run linting and tests
+2. **Build**: Create optimized production build
+3. **Testing**: Test production build locally
+4. **Deploy**: Deploy to hosting platform
+
+### Hosting Options
+- **Vercel**: Recommended for React apps
+- **Netlify**: Alternative hosting platform
+- **AWS S3**: Static hosting with CloudFront
+- **GitHub Pages**: Free hosting for open source
 
 ## 🤝 Contributing
 
-1. Follow the existing component structure
-2. Maintain consistent styling with Tailwind CSS
-3. Add new exercises to the `exercises.js` data file
-4. Test on both desktop and mobile devices
-5. Ensure accessibility standards are met
+### Development Workflow
+1. **Fork**: Fork the repository
+2. **Branch**: Create feature branch
+3. **Develop**: Implement changes with tests
+4. **Test**: Ensure all tests pass
+5. **Submit**: Create pull request
+
+### Code Review
+- **Automated Checks**: CI/CD pipeline validation
+- **Code Review**: Peer review process
+- **Testing**: Ensure test coverage
+- **Documentation**: Update relevant documentation
+
+## 📚 Additional Resources
+
+### Documentation
+- [React Documentation](https://reactjs.org/docs/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Recharts Documentation](https://recharts.org/)
+- [Axios Documentation](https://axios-http.com/)
+
+### Learning Resources
+- [React Hooks Guide](https://reactjs.org/docs/hooks-intro.html)
+- [Modern JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+- [CSS Grid & Flexbox](https://css-tricks.com/snippets/css/complete-guide-grid/)
 
 ## 📄 License
 
-This project is part of the Speech Therapy Assistant application.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### Getting Help
+- **Issues**: Report bugs and feature requests
+- **Discussions**: Ask questions and share ideas
+- **Documentation**: Comprehensive guides and examples
+- **Community**: Join our community channels
+
+### Contact
+- **Email**: support@speechtherapy.com
+- **Discord**: Join our community server
+- **GitHub**: Open issues and discussions
+
+---
+
+**Built with ❤️ by the Speech Therapy Team**

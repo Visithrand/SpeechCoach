@@ -95,6 +95,60 @@ def show_overview_charts():
         fig.update_layout(yaxis_range=[60, 100])
         st.plotly_chart(fig, use_container_width=True)
     
+    # Practice calendar heatmap
+    st.markdown("#### 📅 Practice Calendar")
+    
+    # Generate practice calendar data
+    if st.session_state.user_data['session_history']:
+        # Create calendar data for the last 3 months
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=90)
+        
+        # Create date range
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+        
+        # Count sessions per day
+        calendar_data = []
+        for date in date_range:
+            date_str = date.strftime('%Y-%m-%d')
+            session_count = len([s for s in st.session_state.user_data['session_history'] 
+                               if s.get('date') == date_str])
+            calendar_data.append({
+                'date': date,
+                'sessions': session_count,
+                'intensity': 'High' if session_count >= 3 else 'Medium' if session_count >= 1 else 'Low'
+            })
+        
+        # Create calendar heatmap
+        df_calendar = pd.DataFrame(calendar_data)
+        
+        if not df_calendar.empty:
+            fig = px.density_heatmap(
+                df_calendar,
+                x=df_calendar['date'].dt.day_name(),
+                y=df_calendar['date'].dt.week,
+                z=df_calendar['sessions'],
+                title="Practice Activity Heatmap (Last 3 Months)",
+                color_continuous_scale="Blues",
+                labels={'x': 'Day of Week', 'y': 'Week', 'z': 'Sessions'}
+            )
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Show calendar summary
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                total_practice_days = len([d for d in calendar_data if d['sessions'] > 0])
+                st.metric("Practice Days", f"{total_practice_days}/90")
+            
+            with col2:
+                avg_sessions_per_day = sum([d['sessions'] for d in calendar_data if d['sessions'] > 0]) / max(total_practice_days, 1)
+                st.metric("Avg Sessions/Day", f"{avg_sessions_per_day:.1f}")
+            
+            with col3:
+                best_day = max(calendar_data, key=lambda x: x['sessions'])
+                st.metric("Best Day", f"{best_day['sessions']} sessions")
+    
     # Exercise type breakdown
     st.markdown("#### Exercise Type Performance")
     

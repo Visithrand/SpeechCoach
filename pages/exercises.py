@@ -4,6 +4,8 @@ import random
 from audio_recorder_streamlit import audio_recorder
 import time
 import io
+from datetime import datetime
+import numpy as np
 from utils.scoring_engine import ScoringEngine
 from utils.audio_processor import AudioProcessor
 
@@ -16,6 +18,12 @@ def main():
     
     if 'audio_processor' not in st.session_state:
         st.session_state.audio_processor = AudioProcessor()
+    
+    # Show personalized recommendations
+    show_exercise_recommendations()
+    
+    # Practice timer
+    show_practice_timer()
     
     # Exercise categories
     exercise_type = st.selectbox(
@@ -44,6 +52,10 @@ def phoneme_exercises():
             phonemes = json.load(f)
     except FileNotFoundError:
         st.error("Phoneme data not found. Please check the data files.")
+        st.info("💡 Tip: Make sure the data/phonemes.json file exists in your project directory.")
+        return
+    except json.JSONDecodeError:
+        st.error("Error reading phoneme data. The file may be corrupted.")
         return
     
     # Select difficulty level
@@ -137,6 +149,13 @@ def word_exercises():
         word_exercises_data = exercises['word_exercises']
     except FileNotFoundError:
         st.error("Exercise data not found.")
+        st.info("💡 Tip: Make sure the data/exercises.json file exists in your project directory.")
+        return
+    except json.JSONDecodeError:
+        st.error("Error reading exercise data. The file may be corrupted.")
+        return
+    except KeyError:
+        st.error("Word exercises data not found in the exercises file.")
         return
     
     # Category selection
@@ -565,8 +584,9 @@ def update_exercise_progress(exercise_type, score):
     st.session_state.user_data['total_points'] += points_earned
     
     # Update session history
+    today = str(datetime.now().date())
     session_data = {
-        'date': str(datetime.now().date()),
+        'date': today,
         'exercise_type': exercise_type,
         'score': score,
         'points_earned': points_earned
@@ -574,23 +594,229 @@ def update_exercise_progress(exercise_type, score):
     
     st.session_state.user_data['session_history'].append(session_data)
     
-    # Show earned points
+    # Update streak
+    update_user_streak(today)
+    
+    # Show earned points and streak info
     st.success(f"🎉 You earned {points_earned} points! Total: {st.session_state.user_data['total_points']}")
+    
+    # Show streak update if applicable
+    if st.session_state.user_data['streak_days'] > 0:
+        st.info(f"🔥 Current streak: {st.session_state.user_data['streak_days']} days!")
+    
+    # Show practice summary
+    show_practice_summary(exercise_type, score, points_earned)
+
+def update_user_streak(today_date):
+    """Update user's daily streak based on exercise completion"""
+    if not st.session_state.user_data['session_history']:
+        return
+    
+    # Get unique dates from session history
+    session_dates = set()
+    for session in st.session_state.user_data['session_history']:
+        if session.get('date'):
+            session_dates.add(session['date'])
+    
+    # Sort dates and check for consecutive days
+    sorted_dates = sorted(session_dates)
+    current_streak = 0
+    
+    # Check if today is in the list
+    if today_date in sorted_dates:
+        # Count consecutive days backwards from today
+        current_date = datetime.strptime(today_date, '%Y-%m-%d').date()
+        for i in range(len(sorted_dates)):
+            check_date = datetime.strptime(sorted_dates[-(i+1)], '%Y-%m-%d').date()
+            if check_date == current_date - timedelta(days=i):
+                current_streak += 1
+            else:
+                break
+    
+    st.session_state.user_data['streak_days'] = current_streak
+
+def show_exercise_recommendations():
+    """Show personalized exercise recommendations based on user performance"""
+    if not st.session_state.user_data['session_history']:
+        return
+    
+    st.markdown("### 💡 Personalized Recommendations")
+    
+    # Analyze recent performance
+    recent_sessions = st.session_state.user_data['session_history'][-10:]
+    if not recent_sessions:
+        return
+    
+    # Calculate performance by exercise type
+    exercise_performance = {}
+    for session in recent_sessions:
+        ex_type = session.get('exercise_type', 'unknown')
+        score = session.get('score', 0)
+        if ex_type not in exercise_performance:
+            exercise_performance[ex_type] = []
+        exercise_performance[ex_type].append(score)
+    
+    # Find areas for improvement
+    improvement_areas = []
+    for ex_type, scores in exercise_performance.items():
+        if scores:
+            avg_score = sum(scores) / len(scores)
+            if avg_score < 75:
+                improvement_areas.append((ex_type, avg_score))
+    
+    # Sort by lowest scores first
+    improvement_areas.sort(key=lambda x: x[1])
+    
+    if improvement_areas:
+        st.info("🎯 **Focus on improving these areas:**")
+        for ex_type, avg_score in improvement_areas[:3]:  # Show top 3
+            st.markdown(f"• **{ex_type.title()}**: Current average {int(avg_score)}%")
+        
+        # Show specific recommendations
+        if improvement_areas[0][0] == 'phoneme':
+            st.markdown("💡 **Tip:** Start with basic phoneme practice to build a strong foundation")
+        elif improvement_areas[0][0] == 'word':
+            st.markdown("💡 **Tip:** Focus on word stress patterns and clear pronunciation")
+        elif improvement_areas[0][0] == 'sentence':
+            st.markdown("💡 **Tip:** Practice sentence rhythm and natural flow")
+        elif improvement_areas[0][0] == 'conversation':
+            st.markdown("💡 **Tip:** Work on conversational confidence and clarity")
+    
+    # Show progress trends
+    if len(recent_sessions) >= 5:
+        recent_scores = [s.get('score', 0) for s in recent_sessions[-5:]]
+        if recent_scores:
+            trend = "improving" if recent_scores[-1] > recent_scores[0] else "declining" if recent_scores[-1] < recent_scores[0] else "stable"
+            trend_emoji = "📈" if trend == "improving" else "📉" if trend == "declining" else "➡️"
+            st.success(f"{trend_emoji} **Your performance is {trend}** over the last 5 exercises")
+    
+    st.markdown("---")
+
+def show_practice_summary(exercise_type, score, points_earned):
+    """Show a summary of the practice session and next steps"""
+    st.markdown("### 📋 Practice Summary")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**Session Details:**")
+        st.markdown(f"• Exercise Type: {exercise_type.title()}")
+        st.markdown(f"• Score: {score}/100")
+        st.markdown(f"• Points Earned: {points_earned}")
+        st.markdown(f"• Total Points: {st.session_state.user_data['total_points']}")
+    
+    with col2:
+        st.markdown("**Progress Update:**")
+        st.markdown(f"• Exercises Completed: {st.session_state.user_data['exercises_completed']}")
+        st.markdown(f"• Current Streak: {st.session_state.user_data['streak_days']} days")
+        
+        # Show next milestone
+        next_milestone = 5
+        if st.session_state.user_data['exercises_completed'] >= 5:
+            next_milestone = 10
+        if st.session_state.user_data['exercises_completed'] >= 10:
+            next_milestone = 25
+        if st.session_state.user_data['exercises_completed'] >= 25:
+            next_milestone = 50
+        
+        remaining = next_milestone - st.session_state.user_data['exercises_completed']
+        if remaining > 0:
+            st.markdown(f"• Next Milestone: {remaining} more exercises")
+    
+    # Show motivational message based on performance
+    if score >= 90:
+        st.success("🌟 **Excellent work!** You're mastering this exercise type!")
+    elif score >= 80:
+        st.info("✨ **Great job!** Keep practicing to reach excellence!")
+    elif score >= 70:
+        st.warning("💪 **Good effort!** Focus on the areas for improvement.")
+    else:
+        st.info("🎯 **Keep practicing!** Every attempt makes you better.")
+    
+    # Suggest next exercise
+    st.markdown("### 🚀 What's Next?")
+    if score < 75:
+        st.markdown("**Recommendation:** Practice the same exercise type to improve your score")
+    else:
+        st.markdown("**Recommendation:** Try a more challenging exercise or move to the next level")
+    
+    st.markdown("---")
+
+def show_practice_timer():
+    """Show a practice timer to help users track their session time"""
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.markdown("### ⏱️ Practice Timer")
+    
+    with col2:
+        if 'timer_running' not in st.session_state:
+            st.session_state.timer_running = False
+            st.session_state.timer_start = None
+            st.session_state.timer_elapsed = 0
+    
+        if st.button("▶️ Start Timer" if not st.session_state.timer_running else "⏸️ Pause Timer"):
+            if not st.session_state.timer_running:
+                st.session_state.timer_running = True
+                st.session_state.timer_start = datetime.now()
+            else:
+                st.session_state.timer_running = False
+                st.session_state.timer_elapsed += (datetime.now() - st.session_state.timer_start).total_seconds()
+    
+    with col3:
+        if st.button("🔄 Reset Timer"):
+            st.session_state.timer_running = False
+            st.session_state.timer_start = None
+            st.session_state.timer_elapsed = 0
+    
+    # Display timer
+    if st.session_state.timer_running:
+        current_elapsed = st.session_state.timer_elapsed + (datetime.now() - st.session_state.timer_start).total_seconds()
+    else:
+        current_elapsed = st.session_state.timer_elapsed
+    
+    minutes = int(current_elapsed // 60)
+    seconds = int(current_elapsed % 60)
+    
+    st.markdown(f"**Time: {minutes:02d}:{seconds:02d}**")
+    
+    # Show progress towards daily goal
+    if st.session_state.user_data.get('daily_goal'):
+        goal_minutes = st.session_state.user_data['daily_goal']
+        progress_percent = min(100, (minutes / goal_minutes) * 100)
+        
+        st.markdown(f"**Daily Goal Progress:** {minutes}/{goal_minutes} minutes ({progress_percent:.1f}%)")
+        
+        # Progress bar
+        st.progress(progress_percent / 100)
+    
+    st.markdown("---")
 
 def generate_demo_audio(text):
     """Generate placeholder audio data (in real implementation, use TTS)"""
     # This is a placeholder - in real implementation, use text-to-speech
-    # For now, return empty audio data
-    import numpy as np
+    # For now, generate a more realistic audio waveform
     
     # Generate a simple sine wave as placeholder
     sample_rate = 44100
-    duration = len(text) * 0.1  # Approximate duration based on text length
+    duration = max(0.5, len(text) * 0.15)  # Minimum 0.5s, scale with text length
     t = np.linspace(0, duration, int(sample_rate * duration))
-    frequency = 440  # A4 note
-    audio_data = np.sin(2 * np.pi * frequency * t)
     
-    # Convert to bytes (this is still a placeholder)
+    # Create a more natural speech-like waveform with multiple frequencies
+    base_frequency = 220  # A3 note (more natural speech frequency)
+    audio_data = np.sin(2 * np.pi * base_frequency * t)
+    
+    # Add harmonics for more realistic sound
+    audio_data += 0.3 * np.sin(2 * np.pi * base_frequency * 2 * t)
+    audio_data += 0.1 * np.sin(2 * np.pi * base_frequency * 3 * t)
+    
+    # Add some variation to simulate natural speech
+    envelope = np.exp(-t / duration)  # Fade out
+    audio_data *= envelope
+    
+    # Normalize and convert to 16-bit PCM
+    audio_data = np.int16(audio_data * 16384)  # Scale to 16-bit range
+    
     return audio_data.tobytes()
 
 if __name__ == "__main__":
