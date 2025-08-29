@@ -5,7 +5,7 @@ import { getAuthHeaders, buildApiUrl } from '../config/api';
 
 const Exercises = ({ userId }) => {
   // Use a default userId for testing if none is provided
-  const effectiveUserId = userId || 1;
+  const effectiveUserId = 1 || userId;
   
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);

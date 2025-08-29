@@ -1,5 +1,6 @@
 package com.speechtherapy.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Min;
@@ -16,6 +17,7 @@ public class Exercise {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"exercises"})
     private User user;
     
     @NotBlank(message = "Exercise name is required")
